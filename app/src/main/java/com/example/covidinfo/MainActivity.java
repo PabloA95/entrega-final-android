@@ -4,13 +4,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,14 +68,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchFavsInfo(List<Country> list) {
-//        final TextView country1 = (TextView) findViewById(R.id.countries1);
-//        final TextView country2 = (TextView) findViewById(R.id.countries2);
         final LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
-//        String[] countriesFavs=new String[]{"Argentina", "Brazil"};
         String url ="https://api.covid19api.com/total/dayone/country/";
-//        for (int i = 0; i <  list; i++) {
+
         int i=0;
         for (final Country c:list){
             LinearLayout layout = new LinearLayout(this);
@@ -76,6 +80,12 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             layoutParams.setMargins(10,10,10,10);
             layout.setLayoutParams(layoutParams);
+//------------------------------------
+            RelativeLayout hLayout = new RelativeLayout(this);
+//            hLayout.setOrientation(LinearLayout.HORIZONTAL);
+//            LinearLayout.LayoutParams hLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+//            layout.setLayoutParams(hLayoutParams);
+            layout.addView(hLayout);
 
             final TextView titleView = new TextView(this);
             titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -89,7 +99,53 @@ public class MainActivity extends AppCompatActivity {
 //                    Toast.makeText(getApplicationContext(), "Exito", Toast.LENGTH_SHORT).show();
                 }
             });
-            layout.addView(titleView);
+
+            final ImageButton favIcon = new ImageButton(this);
+//            favIcon.setLayoutParams(new LinearLayout.LayoutParams(50,50));
+            Drawable d = getResources().getDrawable(R.drawable.si);
+            favIcon.setPadding(0,0,0,0);
+            favIcon.setBackgroundColor(Color.WHITE);
+
+            favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            favIcon.setAdjustViewBounds(true);
+            favIcon.setImageDrawable(d);
+            favIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+//                    TextView pais = (TextView)findViewById(R.id.pais);
+                    AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
+                    Country country=db.countryDao().findByName((String) c.getName());
+                    if(country==null) {
+                        Country c1 = new Country((String) c.getName());
+//        TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
+//        TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
+//        TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
+//        TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
+//        TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
+//        TextView fecha = (TextView) findViewById(R.id.fecha);
+                        db.countryDao().insert(c1);
+                        Drawable d = getResources().getDrawable(R.drawable.si);
+                        favIcon.setImageDrawable(d);
+                        Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
+                    } else {
+                        db.countryDao().delete(country);
+                        Drawable d = getResources().getDrawable(R.drawable.no);
+                        favIcon.setImageDrawable(d);
+                        Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
+                    }
+                    db.close();
+//                    Toast.makeText(getApplicationContext(),"search button is Clicked", Toast.LENGTH_LONG).show();
+                }
+            });
+
+
+            hLayout.addView(titleView);
+
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(50,50);
+            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
+            hLayout.addView(favIcon, lp);
+
+//            hLayout.addView(favIcon);
 
             final TextView dateView = new TextView(this);
             dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -119,6 +175,9 @@ public class MainActivity extends AppCompatActivity {
                             } catch (JSONException e) {
                                 titleView.setText(c.getName());
                                 // Cargar desde la db
+                                //remover boton "buscar"
+                                View v = (View) findViewById(R.id.buscar);
+                                ((ViewManager)v.getParent()).removeView(v);
                                 Toast.makeText(getApplicationContext(), "Error1", Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
                             }
