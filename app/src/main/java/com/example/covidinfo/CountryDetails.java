@@ -1,15 +1,13 @@
 package com.example.covidinfo;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,8 +22,9 @@ import com.example.covidinfo.Database.Country;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.List;
+import java.util.Date;
 
 public class CountryDetails extends AppCompatActivity {
 
@@ -47,29 +46,30 @@ public class CountryDetails extends AppCompatActivity {
 
     public void toggleFav(View view) {
         TextView pais = (TextView)findViewById(R.id.pais);
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
+//        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
+        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         Country country=db.countryDao().findByName((String) pais.getText());
         ImageButton favIcon = findViewById(R.id.favIcon);
         if(country==null) {
             Country c1 = new Country((String) pais.getText());
-//        TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
-//        TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
-//        TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
-//        TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
-//        TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
-//        TextView fecha = (TextView) findViewById(R.id.fecha);
+        String totalActivos = ((TextView) findViewById(R.id.totalActivos)).getText().toString();
+        String totalConfirmados = ((TextView) findViewById(R.id.totalConfirmados)).getText().toString();
+        String totalMuertes = ((TextView) findViewById(R.id.totalMuertes)).getText().toString();
+        String nuevosConfirmados = ((TextView) findViewById(R.id.nuevosConfirmados)).getText().toString();
+        String nuevosMuertes = ((TextView) findViewById(R.id.nuevosMuertes)).getText().toString();
+//        Date fecha = new Date(((TextView) findViewById(R.id.fecha)).toString());
             db.countryDao().insert(c1);
-            Drawable d = getResources().getDrawable(R.drawable.si);
-            favIcon.setImageDrawable(d);
+//            Drawable d = getResources().getDrawable(R.drawable.si);
+//            favIcon.setImageDrawable(d);
+            favIcon.setImageResource(R.drawable.si);
             Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
         } else {
             db.countryDao().delete(country);
-            Drawable d = getResources().getDrawable(R.drawable.no);
-            favIcon.setImageDrawable(d);
+//            Drawable d = getResources().getDrawable(R.drawable.no);
+//            favIcon.setImageDrawable(d);
+            favIcon.setImageResource(R.drawable.no);
             Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
         }
-        db.close();
-//        Toast.makeText(getApplicationContext(), "Hacer el toggleFav", Toast.LENGTH_SHORT).show();
     }
 
     public void volver(View view) {
@@ -79,20 +79,14 @@ public class CountryDetails extends AppCompatActivity {
     }
 
     private void searchFavInfo() {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.covid19api.com/total/dayone/country/";
+        final RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="https://api.covid19api.com/summary";
         // totalActivos, totalConfirmados, totalMuertes, nuevosConfirmados, nuevosMuertes
-        final TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
-        final TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
-        final TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
-        final TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
-        final TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
-        final TextView fecha = (TextView) findViewById(R.id.fecha);
-        String country;
+        final String country;
         country = (String) ((TextView) findViewById(R.id.pais)).getText();
 
         //----------------------
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").allowMainThreadQueries().build();
+        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         Country pais=db.countryDao().findByName(country);
         ImageButton favIcon = findViewById(R.id.favIcon);
         if(pais!=null) {
@@ -102,30 +96,38 @@ public class CountryDetails extends AppCompatActivity {
             Drawable d = getResources().getDrawable(R.drawable.no);
             favIcon.setImageDrawable(d);
         }
-        db.close();
         //------------------------
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url+country,
+        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         JSONArray jsonResponse;
                         try {
-                            jsonResponse = new JSONArray(response);
-                            if (jsonResponse.length() > 0){
-                                totalActivos.setText("aaa");
-                                totalConfirmados.setText("bbb");
-                                totalMuertes.setText("ccc");
-                                nuevosConfirmados.setText("123");
-                                nuevosMuertes.setText("456");
-                                fecha.setText("hoy?");
-//                            titleView.setText(jsonResponse.getJSONObject(0).getString("Country"));
-//CONTROLAR QUE TENGA ALGUN ELEMENTO -> Antarctica no devuelve nada!  getJSONObject(0) -> no tiene posicion 0
-                                fecha.setText(jsonResponse.getJSONObject(0).getString("Date"));
-                            } //else {}
+                            jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
+                            if (jsonResponse.length() > 0) {
+                                int i = 0;
+                                while ((i < jsonResponse.length() - 1) && !jsonResponse.getJSONObject(i).getString("Country").equals(country)) {
+                                    i++;
+                                }
+                                // CONTROLAR SI POR MOTIVO RARO NO LO ENCUENTRA
+                                JSONObject jobj = jsonResponse.getJSONObject(i);
+                                Context context = getApplicationContext();
 
+                                TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
+                                TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
+                                TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
+                                TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
+                                TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
+                                TextView fecha = (TextView) findViewById(R.id.fecha);
+                                totalActivos.setText("creo que lo tengo que calcular");
+                                totalConfirmados.setText(jobj.getString("TotalConfirmed"));
+                                totalMuertes.setText(jobj.getString("TotalDeaths"));
+                                nuevosConfirmados.setText(jobj.getString("NewConfirmed"));
+                                nuevosMuertes.setText(jobj.getString("NewDeaths"));
+                                fecha.setText(jobj.getString("Date"));
+                            } // else {}
                         } catch (JSONException e) {
-//                            titleView.setText(c.name);
                             // Cargar desde la db
                             Toast.makeText(getApplicationContext(), "Error3", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
@@ -139,9 +141,7 @@ public class CountryDetails extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Error4", Toast.LENGTH_SHORT).show();
             }
         });
-//        Toast.makeText(getApplicationContext(), "https://api.covid19api.com/total/dayone/country/"+country, Toast.LENGTH_SHORT).show();
-        queue.add(stringRequest);
         // Add the request to the RequestQueue.
-
+        queue.add(stringRequest);
     }
 }

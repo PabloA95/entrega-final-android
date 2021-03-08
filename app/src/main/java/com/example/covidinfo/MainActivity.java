@@ -1,15 +1,13 @@
 package com.example.covidinfo;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -33,6 +31,7 @@ import com.example.covidinfo.Database.Country;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,15 +44,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
-
         queue = Volley.newRequestQueue(this);
         queue.start();
 
         this.searchCountriesList();
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
-
+//        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
+        AppDatabase db = AppDatabase.getInstance(this);
         List<Country> list=db.countryDao().getAll();
         if(list.isEmpty()) {
             db.countryDao().nukeTable();
@@ -62,122 +59,125 @@ public class MainActivity extends AppCompatActivity {
             db.countryDao().insertAll(c1, c2);
             list=db.countryDao().getAll();
         }
-
         this.searchFavsInfo(list);
-        db.close();
+//        db.close();
     }
 
-    private void searchFavsInfo(List<Country> list) {
+    private void searchFavsInfo(final List<Country> list) {
         final LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
-        // Instantiate the RequestQueue.
+//        // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.covid19api.com/total/dayone/country/";
+        String url ="https://api.covid19api.com/summary";
 
-        int i=0;
-        for (final Country c:list){
-            LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins(10,10,10,10);
-            layout.setLayoutParams(layoutParams);
-//------------------------------------
-            RelativeLayout hLayout = new RelativeLayout(this);
-//            hLayout.setOrientation(LinearLayout.HORIZONTAL);
-//            LinearLayout.LayoutParams hLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-//            layout.setLayoutParams(hLayoutParams);
-            layout.addView(hLayout);
-
-            final TextView titleView = new TextView(this);
-            titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            titleView.setText("Hallo Welt!");
-            titleView.setId(i);
-            titleView.setOnClickListener(new Button.OnClickListener() {
-                public void onClick(View v) {
-                    Intent i = new Intent(getApplicationContext(),CountryDetails.class);
-                    i.putExtra("country",titleView.getText());
-                    startActivity(i);
-//                    Toast.makeText(getApplicationContext(), "Exito", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            final ImageButton favIcon = new ImageButton(this);
-//            favIcon.setLayoutParams(new LinearLayout.LayoutParams(50,50));
-            Drawable d = getResources().getDrawable(R.drawable.si);
-            favIcon.setPadding(0,0,0,0);
-            favIcon.setBackgroundColor(Color.WHITE);
-
-            favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            favIcon.setAdjustViewBounds(true);
-            favIcon.setImageDrawable(d);
-            favIcon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-//                    TextView pais = (TextView)findViewById(R.id.pais);
-                    AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
-                    Country country=db.countryDao().findByName((String) c.getName());
-                    if(country==null) {
-                        Country c1 = new Country((String) c.getName());
-//        TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
-//        TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
-//        TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
-//        TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
-//        TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
-//        TextView fecha = (TextView) findViewById(R.id.fecha);
-                        db.countryDao().insert(c1);
-                        Drawable d = getResources().getDrawable(R.drawable.si);
-                        favIcon.setImageDrawable(d);
-                        Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
-                    } else {
-                        db.countryDao().delete(country);
-                        Drawable d = getResources().getDrawable(R.drawable.no);
-                        favIcon.setImageDrawable(d);
-                        Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
-                    }
-                    db.close();
-//                    Toast.makeText(getApplicationContext(),"search button is Clicked", Toast.LENGTH_LONG).show();
-                }
-            });
-
-
-            hLayout.addView(titleView);
-
-            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(50,50);
-            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
-            hLayout.addView(favIcon, lp);
-
-//            hLayout.addView(favIcon);
-
-            final TextView dateView = new TextView(this);
-            dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            dateView.setText("Hallo Welt!");
-            dateView.setId(i);
-            layout.addView(dateView);
-
-            favs.addView(layout);
-//            setContentView(layout);
-            i++;
-            titleView.setText(c.getName());
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url+c.getName(),
-                    new Response.Listener<String>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+             new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             JSONArray jsonResponse;
-                            try {
-                                jsonResponse = new JSONArray(response);
-                                if (jsonResponse.length() > 0) {
-                                    titleView.setText(jsonResponse.getJSONObject(0).getString("Country"));
 
-//                                Toast.makeText(getApplicationContext(), "url"+c.getName(), Toast.LENGTH_SHORT).show();
-//CONTROLAR QUE TENGA ALGUN ELEMENTO -> Antarctica no devuelve nada!  getJSONObject(0) -> no tiene posicion 0
-                                    dateView.setText(jsonResponse.getJSONObject(0).getString("Date"));
+                            try {
+                                jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
+                                if (jsonResponse.length() > 0) {
+                                    for (final Country c:list){
+                                        Integer i=0;
+                                        while ((i <jsonResponse.length()-1) && !jsonResponse.getJSONObject(i).getString("Country").equals(c.getName())){
+                                            i++;
+                                        }
+                                        JSONObject jobj = jsonResponse.getJSONObject(i);
+                                        Context context = getApplicationContext();
+//                                        Toast.makeText(getApplicationContext(), jobj.getString("Country") , Toast.LENGTH_SHORT).show();
+
+                                        LinearLayout layout = new LinearLayout(context);
+                                        layout.setOrientation(LinearLayout.VERTICAL);
+                                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                                        layoutParams.setMargins(10,10,10,10);
+                                        layout.setLayoutParams(layoutParams);
+
+                                        RelativeLayout hLayout = new RelativeLayout(context);
+                                        layout.addView(hLayout);
+
+                                        final TextView titleView = new TextView(context);
+                                        titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        titleView.setText("Hallo Welt!");
+                                        titleView.setId(i);
+                                        titleView.setOnClickListener(new Button.OnClickListener() {
+                                            public void onClick(View v) {
+                                                Intent i = new Intent(getApplicationContext(),CountryDetails.class);
+                                                i.putExtra("country",titleView.getText());
+                                                startActivity(i);
+                                            }
+                                        });
+
+                                        final ImageButton favIcon = new ImageButton(context);
+                                        Drawable d = getResources().getDrawable(R.drawable.si);
+                                        favIcon.setPadding(0,0,0,0);
+                                        favIcon.setBackgroundColor(Color.WHITE);
+                                        favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                        favIcon.setAdjustViewBounds(true);
+                                        favIcon.setImageDrawable(d);
+                                        favIcon.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                                                Country country=db.countryDao().findByName((String) c.getName());
+                                                if(country==null) {
+                                                    Country c1 = new Country((String) c.getName());
+                                                    db.countryDao().insert(c1);
+                                                    Drawable d = getResources().getDrawable(R.drawable.si);
+                                                    favIcon.setImageDrawable(d);
+                                                    Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    db.countryDao().delete(country);
+                                                    Drawable d = getResources().getDrawable(R.drawable.no);
+                                                    favIcon.setImageDrawable(d);
+                                                    Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        });
+
+                                        hLayout.addView(titleView);
+                                        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(50,50);
+                                        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
+                                        hLayout.addView(favIcon, lp);
+
+                                        final TextView dateView = new TextView(context);
+                                        dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        dateView.setText("Hallo Welt!");
+                                        dateView.setId(i);
+                                        layout.addView(dateView);
+                                        favs.addView(layout);
+
+                                        titleView.setText(jobj.getString("Country"));
+                                        dateView.setText(jobj.getString("Date"));
+
+                                        LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+                                        TextView totalActivos =  new TextView(context);
+                                        TextView totalConfirmados = new TextView(context);
+                                        TextView totalMuertes = new TextView(context);
+                                        TextView nuevosConfirmados = new TextView(context);
+                                        TextView nuevosMuertes = new TextView(context);
+                                        nuevosMuertes.setLayoutParams(dataParams);
+                                        totalActivos.setLayoutParams(dataParams);
+                                        totalConfirmados.setLayoutParams(dataParams);
+                                        totalMuertes.setLayoutParams(dataParams);
+                                        nuevosConfirmados.setLayoutParams(dataParams);
+                                        //ACTUALIZAR LOS DATOS DE LOS FAVORITOS
+                                        totalActivos.setText("creo que lo tengo que calcular");
+                                        totalConfirmados.setText(jobj.getString("TotalConfirmed"));
+                                        totalMuertes.setText(jobj.getString("TotalDeaths"));
+                                        nuevosConfirmados.setText(jobj.getString("NewConfirmed"));
+                                        nuevosMuertes.setText(jobj.getString("NewDeaths"));
+                                        layout.addView(totalActivos);
+                                        layout.addView(totalConfirmados);
+                                        layout.addView(totalMuertes);
+                                        layout.addView(nuevosConfirmados);
+                                        layout.addView(nuevosMuertes);
+                                    }
                                 } //else {}
 
                             } catch (JSONException e) {
-                                titleView.setText(c.getName());
-                                // Cargar desde la db
-                                //remover boton "buscar"
-                                View v = (View) findViewById(R.id.buscar);
-                                ((ViewManager)v.getParent()).removeView(v);
+                                //CARGAR DESDE LA DB
                                 Toast.makeText(getApplicationContext(), "Error1", Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
                             }
@@ -186,15 +186,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     // Cargar desde la db
-                    titleView.setText(c.getName());
+
                     Toast.makeText(getApplicationContext(), "Error2", Toast.LENGTH_SHORT).show();
                 }
             });
-//            Toast.makeText(getApplicationContext(), "https://api.covid19api.com/total/dayone/country/"+c.getName(), Toast.LENGTH_SHORT).show();
+            // Add the request to the RequestQueue.
             queue.add(stringRequest);
-        }
-        // Add the request to the RequestQueue.
-
     }
 
     private void searchCountriesList(){
@@ -236,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
                         } catch (JSONException e) {
+                            Button b = (Button) findViewById(R.id.buscar);
+                            ((ViewManager)b.getParent()).removeView(b);
                             Toast.makeText(getApplicationContext(),"Error al cargar la lista de paises", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
@@ -243,7 +242,13 @@ public class MainActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-//                textView.setText("That didn't work!");
+                TextView texto = new TextView(getApplicationContext());
+                texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                texto.setPadding(0,0,0,0);
+                texto.setText("No se pudo cargar la lista de paises");
+                Button b = (Button) findViewById(R.id.buscar);
+                ((ViewManager)b.getParent()).addView(texto, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                ((ViewManager)b.getParent()).removeView(b);
                 Toast.makeText(getApplicationContext(),"Error en la respuesta del servidor", Toast.LENGTH_SHORT).show();
             }
         });
