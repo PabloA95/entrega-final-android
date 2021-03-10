@@ -15,32 +15,34 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="10dp">
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="20sp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pais 2"
+                    android:text="***"
                     android:id="@+id/pais"
-                    android:textSize="25sp"
+                    android:textSize="45sp"
                     android:layout_marginStart="10dp"
                     app:layout_constraintTop_toTopOf="parent" />
                 <ImageButton
                     android:onClick="toggleFav"
                     android:id="@+id/favIcon"
-                    android:layout_height="25sp"
-                    android:layout_width="25sp"
+                    android:layout_height="45sp"
+                    android:layout_width="45sp"
                     android:scaleType="fitCenter"
                     android:adjustViewBounds="true"
-                    android:background="#FFF">
+                    android:background="#FFF"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginEnd="10dp">
                 </ImageButton>
-            </LinearLayout>
+            </RelativeLayout>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="cuando/"
                 android:id="@+id/fecha"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
@@ -49,7 +51,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Total de casos activos: 111"
                 android:id="@+id/totalActivos"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
@@ -57,7 +58,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Total de casos confirmados: 222"
                 android:id="@+id/totalConfirmados"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
@@ -65,7 +65,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cantidad total de muertos: 333"
                 android:id="@+id/totalMuertes"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
@@ -73,7 +72,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Casos nuevos confirmados: 321"
                 android:id="@+id/nuevosConfirmados"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
@@ -81,7 +79,6 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Muertes nuevas: 123"
                 android:id="@+id/nuevosMuertes"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
