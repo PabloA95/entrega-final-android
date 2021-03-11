@@ -94,8 +94,6 @@ public class CountryDetails extends AppCompatActivity {
         String url ="https://api.covid19api.com/summary";
         final String country;
         country = (String) ((TextView) findViewById(R.id.pais)).getText();
-
-        //----------------------
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         final Country pais=db.countryDao().findByName(country);
         ImageButton favIcon = findViewById(R.id.favIcon);
@@ -104,7 +102,6 @@ public class CountryDetails extends AppCompatActivity {
         } else {
             favIcon.setImageResource(R.drawable.no);
         }
-        //------------------------
 
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -187,10 +184,10 @@ public class CountryDetails extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // Cargar desde la db
-                // No va a estar en la db necesariamente si no es favorito...
                 if(pais!=null) {
                     cargarInfoDesdeDB(pais);
                 } else {
+                    // No va a estar en la db necesariamente si no es favorito...
                     errorAlCargar();
                 }
                 Toast.makeText(getApplicationContext(), "Error4", Toast.LENGTH_SHORT).show();

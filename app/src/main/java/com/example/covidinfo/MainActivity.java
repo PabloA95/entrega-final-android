@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         List<Country> list=db.countryDao().getAllOrderByName();
 //        db.countryDao().nukeTable();
         if(list.isEmpty()) {
-//            db.countryDao().nukeTable();
             Country c1 = new Country("Argentina","0","0","0","0","0");
             Country c2 = new Country("Brazil","3","7","1","2","1");
             c1.setDate(new java.sql.Date(new Date().getTime()));
@@ -83,143 +82,22 @@ public class MainActivity extends AppCompatActivity {
                             try {
                                 jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
                                 if (jsonResponse.length() > 0) {
-                                    Integer i=0;
+                                    int i=0;
                                     AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                                    Context context = getApplicationContext();
                                     for (final Country c:list){
                                         while ((i <jsonResponse.length()-1) && !jsonResponse.getJSONObject(i).getString("Country").equals(c.getName())){
                                             i++;
                                         }
+
+                                        // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
                                         JSONObject jobj = jsonResponse.getJSONObject(i);
-                                        Context context = getApplicationContext();
-//                                        Toast.makeText(getApplicationContext(), jobj.getString("Country") , Toast.LENGTH_SHORT).show();
-
-                                        // Creo los layout donde se van a mostrar los datos del pais
-                                        LinearLayout layout = new LinearLayout(context);
-                                        layout.setOrientation(LinearLayout.VERTICAL);
-                                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                                        layoutParams.setMargins(10,10,10,10);
-                                        layout.setLayoutParams(layoutParams);
-                                        RelativeLayout hLayout = new RelativeLayout(context);
-                                        layout.addView(hLayout);
-                                        final LinearLayout layoutContent = new LinearLayout(context);
-                                        layoutContent.setOrientation(LinearLayout.VERTICAL);
-                                        layoutParams.setMargins(10,10,10,10);
-                                        layoutContent.setLayoutParams(layoutParams);
-
-
-                                        // Creo el campo donde se va a mostrar el nombre del pais
-                                        final TextView titleView = new TextView(context);
-                                        titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                                        titleView.setText(jobj.getString("Country"));
-                                        titleView.setId(i);
-                                        titleView.setOnClickListener(new Button.OnClickListener() {
-                                            public void onClick(View v) {
-                                                Intent i = new Intent(getApplicationContext(),CountryDetails.class);
-                                                i.putExtra("country",titleView.getText());
-                                                startActivity(i);
-                                            }
-                                        });
-
-                                        // Creo los campos para todos los atributos a mostrar y les asigno un id
-                                        // los defino como final para poder accederlos desde el setOnClickListener del ImageButton
-                                        final TextView totalActivos =  new TextView(context);
-                                        totalActivos.setId(i*10+1);
-                                        final TextView totalConfirmados = new TextView(context);
-                                        totalConfirmados.setId(i*10+2);
-                                        final TextView totalMuertes = new TextView(context);
-                                        totalMuertes.setId(i*10+3);
-                                        final TextView nuevosConfirmados = new TextView(context);
-                                        nuevosConfirmados.setId(i*10+4);
-                                        final TextView nuevosMuertes = new TextView(context);
-                                        nuevosMuertes.setId(i*10+5);
-                                        // View para la fecha
-                                        final TextView dateView = new TextView(context);
-                                        dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                                        dateView.setText("date_view");
-                                        dateView.setId(i*10+6);
-
-                                        // Creo el boton que va a mostrar si esta guardado en favorito y que permite cambiarlo
-                                        final ImageButton favIcon = new ImageButton(context);
-                                        favIcon.setImageResource(R.drawable.si);
-                                        favIcon.setPadding(0,0,0,0);
-                                        favIcon.setBackgroundColor(Color.WHITE);
-                                        favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                                        favIcon.setAdjustViewBounds(true);
-                                        favIcon.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-                                                // Funcion para realizar el toggleFav
-                                                Country country=db.countryDao().findByName((String) c.getName());
-                                                if(country==null) {
-                                                    String totalActivosStr = ((TextView) findViewById(totalActivos.getId())).getText().toString();
-                                                    String totalConfirmadosStr = ((TextView) findViewById(totalConfirmados.getId())).getText().toString();
-                                                    String totalMuertesStr = ((TextView) findViewById(totalMuertes.getId())).getText().toString();
-                                                    String nuevosConfirmadosStr = ((TextView) findViewById(nuevosConfirmados.getId())).getText().toString();
-                                                    String nuevosMuertesStr = ((TextView) findViewById(nuevosMuertes.getId())).getText().toString();
-                                                    Country c1 = new Country(c.getName(),totalActivosStr,totalConfirmadosStr,totalMuertesStr,nuevosConfirmadosStr,nuevosMuertesStr);
-
-                                                    String strDate = ((TextView) findViewById(dateView.getId())).getText().toString();
-                                                    Date utilDate; // = new Date(strDate);
-                                                    try {
-                                                        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyyy HH:mm");
-                                                        utilDate = format.parse(strDate);
-                                                    }
-                                                    catch(ParseException pe) {
-                                                        throw new IllegalArgumentException(pe);
-                                                    }
-                                                    java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                                                    c1.setDate(sqlDate);
-                                                    db.countryDao().insert(c1);
-                                                    favIcon.setImageResource(R.drawable.si);
-                                                    Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
-                                                } else {
-                                                    db.countryDao().delete(country);
-                                                    favIcon.setImageResource(R.drawable.no);
-                                                    Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        });
-
-                                        layout.addView(dateView);
-                                        layout.addView(layoutContent);
-                                        hLayout.addView(titleView);
-                                        int textSize = 20;
-                                        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(textSize*4,textSize*4);
-                                        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
-                                        hLayout.addView(favIcon, lp);
-                                        favs.addView(layout);
-
-                                        // Seteo todos los valores a mostrar y los agrego a los layouts
-                                        titleView.setText(jobj.getString("Country"));
-                                        LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                                        nuevosMuertes.setLayoutParams(dataParams);
-                                        totalActivos.setLayoutParams(dataParams);
-                                        totalConfirmados.setLayoutParams(dataParams);
-                                        totalMuertes.setLayoutParams(dataParams);
-                                        nuevosConfirmados.setLayoutParams(dataParams);
-                                        titleView.setTextSize(textSize+10);
-                                        dateView.setTextSize(textSize+5);
-                                        nuevosMuertes.setTextSize(textSize);
-                                        totalActivos.setTextSize(textSize);
-                                        totalConfirmados.setTextSize(textSize);
-                                        totalMuertes.setTextSize(textSize);
-                                        nuevosConfirmados.setTextSize(textSize);
-                                        //ACTUALIZAR LOS DATOS DE LOS FAVORITOS
-                                        Long activos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
-                                        totalActivos.setText("Activos totales: "+activos.toString());
-                                        totalConfirmados.setText("Confirmados totales: "+jobj.getString("TotalConfirmed"));
-                                        totalMuertes.setText("Muertes totales: "+jobj.getString("TotalDeaths"));
-                                        nuevosConfirmados.setText("Nuevos confirmados: "+jobj.getString("NewConfirmed"));
-                                        nuevosMuertes.setText("Nuevos muertos: "+jobj.getString("NewDeaths"));
-                                        layoutContent.addView(totalActivos);
-                                        layoutContent.addView(totalConfirmados);
-                                        layoutContent.addView(totalMuertes);
-                                        layoutContent.addView(nuevosConfirmados);
-                                        layoutContent.addView(nuevosMuertes);
-                                        layoutContent.setVisibility(View.GONE);
-
-                                        // Date
+                                        long totalActivos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
+                                        String totalConfirmadosStr = "Confirmados totales: "+jobj.getString("TotalConfirmed");
+                                        String totalMuertesStr = "Muertes totales: "+jobj.getString("TotalDeaths");
+                                        String nuevosConfirmadosStr = "Nuevos confirmados: "+jobj.getString("NewConfirmed");
+                                        String nuevosMuertesStr = "Nuevos muertos: "+jobj.getString("NewDeaths");
+                                        Country countryAux = new Country(c.getName(),"Activos totales: "+ totalActivos,totalConfirmadosStr,totalMuertesStr,nuevosConfirmadosStr,nuevosMuertesStr);
                                         String strDate = jobj.getString("Date");
                                         strDate=strDate.replace("T"," ");
                                         strDate=strDate.replace("Z","");
@@ -233,36 +111,23 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         Calendar calendar = new GregorianCalendar();
                                         calendar.setTime(utilDate);
-                                        Integer year = calendar.get(Calendar.YEAR);
-                                        Integer month = calendar.get(Calendar.MONTH) + 1;
-                                        Integer day = calendar.get(Calendar.DAY_OF_MONTH);
-                                        Integer hour = calendar.get(Calendar.HOUR);
-                                        Integer minute = calendar.get(Calendar.MINUTE);
-                                        dateView.setText(day.toString()+"/"+month.toString()+"/"+year.toString()+" "+hour.toString()+":"+minute.toString());
-                                        dateView.setOnClickListener(new View.OnClickListener(){
-                                            @Override
-                                            public void onClick(View v){
-                                                if (layoutContent.getVisibility() == View.GONE) {
-                                                    //            animar(true);
-                                                    layoutContent.setVisibility(View.VISIBLE);
-                                                } else{
-                                                    //            animar(false);
-                                                    layoutContent.setVisibility(View.GONE);
-                                                }
-                                            }
-                                        });
-                                        // Actualizar solo si los datos son mas nuevos
+                                        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                                        countryAux.setDate(sqlDate);
+
+                                        crearViewParaPais(countryAux,i,favs,context);
+
+//                                         Actualizar solo si los datos son mas nuevos
                                         if (c.getDate() != null && c.getDate().before(utilDate)){
                                             Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
 
 //        -----------                       //REVISAR QUE ESTO ANDE BIEN
-                                            c.setTotalMuertes(totalMuertes.getText().toString());
-                                            c.setTotalConfirmados(totalConfirmados.getText().toString());
-                                            c.setTotalActivos(totalActivos.getText().toString());
-                                            c.setNuevosMuertes(nuevosMuertes.getText().toString());
-                                            c.setNuevosConfirmados(nuevosConfirmados.getText().toString());
-                                            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                                            c.setDate(sqlDate);
+                                            c.setTotalMuertes(countryAux.getTotalMuertes());
+                                            c.setTotalConfirmados(countryAux.getTotalConfirmados());
+                                            c.setTotalActivos(countryAux.getTotalActivos());
+                                            c.setNuevosMuertes(countryAux.getNuevosMuertes());
+                                            c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
+//                                            java.sql.Date sqlDate = countryAux.getDate();
+                                            c.setDate(countryAux.getDate());
                                             db.countryDao().updateCountry(c);
                                         }
                                     }
@@ -348,161 +213,157 @@ public class MainActivity extends AppCompatActivity {
     public void verDetalles(View view) {
         Intent i = new Intent(this,CountryDetails.class);
         Spinner country = (Spinner) findViewById(R.id.countries);
-        String param = country.getSelectedItem().toString();;
+        String param = country.getSelectedItem().toString();
         i.putExtra("country",param);
         startActivity(i);
     }
 
     public void cargarDesdeDB(List<Country> list){
-        final LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
-            int i=0;
-            for (final Country c:list){
-                Context context = getApplicationContext();
+        LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
+        int i=0;
+        Context context = getApplicationContext();
+        for (Country c:list){
+            crearViewParaPais(c,i, favs,context);
+            i++;
+        }
+    }
 
-                LinearLayout layout = new LinearLayout(context);
-                layout.setOrientation(LinearLayout.VERTICAL);
-                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                layoutParams.setMargins(10,10,10,10);
-                layout.setLayoutParams(layoutParams);
-                RelativeLayout hLayout = new RelativeLayout(context);
-                layout.addView(hLayout);
-                final LinearLayout layoutContent = new LinearLayout(context);
-                layoutContent.setOrientation(LinearLayout.VERTICAL);
-                layoutParams.setMargins(10,10,10,10);
-                layoutContent.setLayoutParams(layoutParams);
-                layoutContent.setVisibility(View.GONE);
+    private void crearViewParaPais(final Country c, int i, LinearLayout favs, Context context){
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.setMargins(10,10,10,10);
+        layout.setLayoutParams(layoutParams);
+        RelativeLayout hLayout = new RelativeLayout(context);
+        layout.addView(hLayout);
+        final LinearLayout layoutContent = new LinearLayout(context);
+        layoutContent.setOrientation(LinearLayout.VERTICAL);
+        layoutParams.setMargins(10,10,10,10);
+        layoutContent.setLayoutParams(layoutParams);
+        layoutContent.setVisibility(View.GONE);
 
-                final TextView titleView = new TextView(context);
-                titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                titleView.setText("Hallo Welt!");
-                titleView.setOnClickListener(new Button.OnClickListener() {
-                    public void onClick(View v) {
-                        Intent i = new Intent(getApplicationContext(),CountryDetails.class);
-                        i.putExtra("country",titleView.getText());
-                        startActivity(i);
-                    }
-                });
-
-                // Creo los campos para todos los atributos a mostrar y les asigno un id
-                // los defino como final para poder accederlos desde el setOnClickListener del ImageButton
-                final TextView totalActivos =  new TextView(context);
-                totalActivos.setId(i*10+1);
-                final TextView totalConfirmados = new TextView(context);
-                totalConfirmados.setId(i*10+2);
-                final TextView totalMuertes = new TextView(context);
-                totalMuertes.setId(i*10+3);
-                final TextView nuevosConfirmados = new TextView(context);
-                nuevosConfirmados.setId(i*10+4);
-                final TextView nuevosMuertes = new TextView(context);
-                nuevosMuertes.setId(i*10+5);
-                final TextView dateView = new TextView(context);
-                dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                dateView.setText("Hallo Welt!");
-                dateView.setId(i*10+6);
-                final ImageButton favIcon = new ImageButton(context);
-                favIcon.setImageResource(R.drawable.si);
-                favIcon.setPadding(0,0,0,0);
-                favIcon.setBackgroundColor(Color.WHITE);
-                favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                favIcon.setAdjustViewBounds(true);
-                favIcon.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-                        // Funcion para realizar el toggleFav
-                        Country country=db.countryDao().findByName((String) c.getName());
-//                        Toast.makeText(getApplicationContext(), c.getName(), Toast.LENGTH_SHORT).show();
-                        if(country==null) {
-                            String totalActivosStr = ((TextView) findViewById(totalActivos.getId())).getText().toString();
-                            String totalConfirmadosStr = ((TextView) findViewById(totalConfirmados.getId())).getText().toString();
-                            String totalMuertesStr = ((TextView) findViewById(totalMuertes.getId())).getText().toString();
-                            String nuevosConfirmadosStr = ((TextView) findViewById(nuevosConfirmados.getId())).getText().toString();
-                            String nuevosMuertesStr = ((TextView) findViewById(nuevosMuertes.getId())).getText().toString();
-                            Country c1 = new Country(c.getName(),totalActivosStr,totalConfirmadosStr,totalMuertesStr,nuevosConfirmadosStr,nuevosMuertesStr);
-
-                            String strDate = ((TextView) findViewById(dateView.getId())).getText().toString();
-                            Date utilDate; // = new Date(strDate);
-                            try {
-                                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyyy HH:mm");
-                                utilDate = format.parse(strDate);
-                            }
-                            catch(ParseException pe) {
-                                throw new IllegalArgumentException(pe);
-                            }
-                            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                            c1.setDate(sqlDate);
-//                                                    String strDate = ((TextView) findViewById(R.id.fecha)).toString();
-                            db.countryDao().insert(c1);
-                            favIcon.setImageResource(R.drawable.si);
-                            Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
-                        } else {
-                            db.countryDao().delete(country);
-                            favIcon.setImageResource(R.drawable.no);
-                            Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-
-                hLayout.addView(titleView);
-                int textSize = 20;
-                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(textSize*4,textSize*4);
-                lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
-                hLayout.addView(favIcon, lp);
-                layout.addView(dateView);
-                layout.addView(layoutContent);
-                favs.addView(layout);
-
-                titleView.setText(c.getName());
-//                dateView.setText("Desde la DB");
-                java.sql.Date sqlDate = c.getDate();
-                Date utilDate = new Date(sqlDate.getTime());
-                Calendar calendar = new GregorianCalendar();
-                calendar.setTime(utilDate);
-                Integer year = calendar.get(Calendar.YEAR);
-                Integer month = calendar.get(Calendar.MONTH) + 1;
-                Integer day = calendar.get(Calendar.DAY_OF_MONTH);
-                Integer hour = calendar.get(Calendar.HOUR);
-                Integer minute = calendar.get(Calendar.MINUTE);
-                dateView.setText(day.toString()+"/"+month.toString()+"/"+year.toString()+" "+hour.toString()+":"+minute.toString());
-                dateView.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View v){
-                        if (layoutContent.getVisibility() == View.GONE) {
-                //            animar(true);
-                            layoutContent.setVisibility(View.VISIBLE);
-                        } else{
-                //            animar(false);
-                            layoutContent.setVisibility(View.GONE);
-                        }
-                    }
-                });
-                LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-
-                nuevosMuertes.setLayoutParams(dataParams);
-                totalActivos.setLayoutParams(dataParams);
-                totalConfirmados.setLayoutParams(dataParams);
-                totalMuertes.setLayoutParams(dataParams);
-                nuevosConfirmados.setLayoutParams(dataParams);
-                titleView.setTextSize(textSize+10);
-                dateView.setTextSize(textSize+5);
-                nuevosMuertes.setTextSize(textSize);
-                totalActivos.setTextSize(textSize);
-                totalConfirmados.setTextSize(textSize);
-                totalMuertes.setTextSize(textSize);
-                nuevosConfirmados.setTextSize(textSize);
-                //ACTUALIZAR LOS DATOS DE LOS FAVORITOS
-                totalActivos.setText(c.getTotalActivos());
-                totalConfirmados.setText(c.getTotalConfirmados());
-                totalMuertes.setText(c.getTotalMuertes());
-                nuevosConfirmados.setText(c.getNuevosConfirmados());
-                nuevosMuertes.setText(c.getNuevosMuertes());
-                layoutContent.addView(totalActivos);
-                layoutContent.addView(totalConfirmados);
-                layoutContent.addView(totalMuertes);
-                layoutContent.addView(nuevosConfirmados);
-                layoutContent.addView(nuevosMuertes);
-                i++;
+        final TextView titleView = new TextView(context);
+        titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        titleView.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(),CountryDetails.class);
+                i.putExtra("country",titleView.getText());
+                startActivity(i);
             }
+        });
+
+        // Creo los campos para todos los atributos a mostrar y les asigno un id
+        // los defino como final para poder accederlos desde el setOnClickListener del ImageButton
+        final TextView totalActivos =  new TextView(context);
+        totalActivos.setId(i*10+1);
+        final TextView totalConfirmados = new TextView(context);
+        totalConfirmados.setId(i*10+2);
+        final TextView totalMuertes = new TextView(context);
+        totalMuertes.setId(i*10+3);
+        final TextView nuevosConfirmados = new TextView(context);
+        nuevosConfirmados.setId(i*10+4);
+        final TextView nuevosMuertes = new TextView(context);
+        nuevosMuertes.setId(i*10+5);
+        final TextView dateView = new TextView(context);
+        dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        dateView.setId(i*10+6);
+        final ImageButton favIcon = new ImageButton(context);
+        favIcon.setImageResource(R.drawable.si);
+        favIcon.setPadding(0,0,0,0);
+        favIcon.setBackgroundColor(Color.WHITE);
+        favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        favIcon.setAdjustViewBounds(true);
+        favIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                // Funcion para realizar el toggleFav
+                Country country=db.countryDao().findByName((String) c.getName());
+//                        Toast.makeText(getApplicationContext(), c.getName(), Toast.LENGTH_SHORT).show();
+                if(country==null) {
+                    db.countryDao().insert(c);
+                    favIcon.setImageResource(R.drawable.si);
+                    Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
+                } else {
+                    db.countryDao().delete(country);
+                    favIcon.setImageResource(R.drawable.no);
+                    Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        ImageButton unfold = new ImageButton(context);
+        unfold.setImageResource(R.drawable.des);
+        unfold.setPadding(0,30,20,0);
+        unfold.setBackgroundColor(Color.WHITE);
+        unfold.setMaxHeight(70);
+        unfold.setMaxWidth(70);
+        unfold.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        unfold.setAdjustViewBounds(true);
+        unfold.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                if (layoutContent.getVisibility() == View.GONE) {
+                    //            animar(true);
+                    layoutContent.setVisibility(View.VISIBLE);
+                } else{
+                    //            animar(false);
+                    layoutContent.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        LinearLayout layoutTitle = new LinearLayout(context);
+        layoutTitle.setOrientation(LinearLayout.HORIZONTAL);
+        layoutContent.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        titleView.setPadding(20,0,0,30);
+        layoutTitle.addView(unfold);
+        layoutTitle.addView(titleView);
+        hLayout.addView(layoutTitle);
+        int textSize = 20;
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(textSize*4,textSize*4);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, favIcon.getId());
+        hLayout.addView(favIcon, lp);
+        layoutContent.addView(dateView);
+        layout.addView(layoutContent);
+        favs.addView(layout);
+
+        titleView.setText(c.getName());
+        java.sql.Date sqlDate = c.getDate();
+        Date utilDate = new Date(sqlDate.getTime());
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(utilDate);
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1;
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int hour = calendar.get(Calendar.HOUR);
+        int minute = calendar.get(Calendar.MINUTE);
+        dateView.setText(day +"/"+ month +"/"+ year +" "+ hour +":"+ minute);
+
+        LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        nuevosMuertes.setLayoutParams(dataParams);
+        totalActivos.setLayoutParams(dataParams);
+        totalConfirmados.setLayoutParams(dataParams);
+        totalMuertes.setLayoutParams(dataParams);
+        nuevosConfirmados.setLayoutParams(dataParams);
+        titleView.setTextSize(textSize+10);
+        dateView.setTextSize(textSize+5);
+        nuevosMuertes.setTextSize(textSize);
+        totalActivos.setTextSize(textSize);
+        totalConfirmados.setTextSize(textSize);
+        totalMuertes.setTextSize(textSize);
+        nuevosConfirmados.setTextSize(textSize);
+        //ACTUALIZAR LOS DATOS DE LOS FAVORITOS
+        totalActivos.setText(c.getTotalActivos());
+        totalConfirmados.setText(c.getTotalConfirmados());
+        totalMuertes.setText(c.getTotalMuertes());
+        nuevosConfirmados.setText(c.getNuevosConfirmados());
+        nuevosMuertes.setText(c.getNuevosMuertes());
+        layoutContent.addView(totalActivos);
+        layoutContent.addView(totalConfirmados);
+        layoutContent.addView(totalMuertes);
+        layoutContent.addView(nuevosConfirmados);
+        layoutContent.addView(nuevosMuertes);
     }
 
 //    private void animar(boolean mostrar)
