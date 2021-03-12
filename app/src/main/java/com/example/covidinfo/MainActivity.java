@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton unfold = new ImageButton(context);
+        final ImageButton unfold = new ImageButton(context);
         unfold.setImageResource(R.drawable.des);
         unfold.setPadding(0,30,20,0);
         unfold.setBackgroundColor(Color.WHITE);
@@ -305,9 +305,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v){
                 if (layoutContent.getVisibility() == View.GONE) {
                     //            animar(true);
+                    unfold.setImageResource(R.drawable.pleg);
                     layoutContent.setVisibility(View.VISIBLE);
                 } else{
                     //            animar(false);
+                    unfold.setImageResource(R.drawable.des);
                     layoutContent.setVisibility(View.GONE);
                 }
             }
@@ -338,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         int hour = calendar.get(Calendar.HOUR);
         int minute = calendar.get(Calendar.MINUTE);
-        dateView.setText(day +"/"+ month +"/"+ year +" "+ hour +":"+ minute);
+        dateView.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
 
         LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         nuevosMuertes.setLayoutParams(dataParams);

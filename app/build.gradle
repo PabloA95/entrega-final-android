@@ -42,4 +42,5 @@ dependencies {
 //    // optional - Test helpers
 //    testImplementation "androidx.room:room-testing:$room_version"
 
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3' //2.2.3
 }
