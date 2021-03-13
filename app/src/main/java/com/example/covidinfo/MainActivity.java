@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewManager;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
+        getSupportActionBar().hide(); // hide the title bar
         setContentView(R.layout.activity_main);
         queue = Volley.newRequestQueue(this);
         queue.start();
@@ -179,15 +181,11 @@ public class MainActivity extends AppCompatActivity {
                                     android.R.layout.simple_spinner_item, countriesSpinner);
                             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                             s.setAdapter(adapter);
+                            ((Button) findViewById(R.id.buscar)).setVisibility(View.VISIBLE);
+                            ((Button) findViewById(R.id.reload)).setVisibility(View.GONE);
+                            ((TextView) findViewById(R.id.listError)).setVisibility(View.GONE);
                         } catch (JSONException e) {
-                            // Si no puedo cargar la lista de paises, borro el boton de buscar
-                            TextView texto = new TextView(getApplicationContext());
-                            texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                            texto.setPadding(0,0,0,0);
-                            texto.setText("No se pudo cargar la lista de paises");
-                            Button b = (Button) findViewById(R.id.buscar);
-                            ((ViewManager)b.getParent()).addView(texto, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                            ((ViewManager)b.getParent()).removeView(b);
+                            errorCargandoLaLista();
                             Toast.makeText(getApplicationContext(),"Error al cargar la lista de paises", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
@@ -196,13 +194,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // Si el servidor responde con un error, borro el boton de buscar
-                TextView texto = new TextView(getApplicationContext());
-                texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                texto.setPadding(0,0,0,0);
-                texto.setText("No se pudo cargar la lista de paises");
-                Button b = (Button) findViewById(R.id.buscar);
-                ((ViewManager)b.getParent()).addView(texto, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                ((ViewManager)b.getParent()).removeView(b);
+                errorCargandoLaLista();
                 Toast.makeText(getApplicationContext(),"Error en la respuesta del servidor", Toast.LENGTH_SHORT).show();
             }
         });
@@ -252,27 +244,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        int myColor = getResources().getColor(R.color.textColor);
+        titleView.setTextColor(myColor);
         // Creo los campos para todos los atributos a mostrar y les asigno un id
         // los defino como final para poder accederlos desde el setOnClickListener del ImageButton
         final TextView totalActivos =  new TextView(context);
         totalActivos.setId(i*10+1);
+        totalActivos.setTextColor(myColor);
         final TextView totalConfirmados = new TextView(context);
         totalConfirmados.setId(i*10+2);
+        totalConfirmados.setTextColor(myColor);
         final TextView totalMuertes = new TextView(context);
         totalMuertes.setId(i*10+3);
+        totalMuertes.setTextColor(myColor);
         final TextView nuevosConfirmados = new TextView(context);
         nuevosConfirmados.setId(i*10+4);
+        nuevosConfirmados.setTextColor(myColor);
         final TextView nuevosMuertes = new TextView(context);
         nuevosMuertes.setId(i*10+5);
+        nuevosMuertes.setTextColor(myColor);
         final TextView dateView = new TextView(context);
         dateView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         dateView.setId(i*10+6);
+        dateView.setTextColor(myColor);
         final ImageButton favIcon = new ImageButton(context);
         favIcon.setImageResource(R.drawable.si);
         favIcon.setPadding(0,0,0,0);
         favIcon.setBackgroundColor(Color.WHITE);
         favIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         favIcon.setAdjustViewBounds(true);
+        favIcon.setBackgroundColor(Color.TRANSPARENT);
         favIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -300,6 +301,7 @@ public class MainActivity extends AppCompatActivity {
         unfold.setMaxWidth(70);
         unfold.setScaleType(ImageView.ScaleType.FIT_CENTER);
         unfold.setAdjustViewBounds(true);
+        unfold.setBackgroundColor(Color.TRANSPARENT);
         unfold.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
@@ -366,6 +368,24 @@ public class MainActivity extends AppCompatActivity {
         layoutContent.addView(totalMuertes);
         layoutContent.addView(nuevosConfirmados);
         layoutContent.addView(nuevosMuertes);
+    }
+
+    public void recargarLista(View view) {
+        searchCountriesList();
+    }
+
+    private void errorCargandoLaLista(){
+        Button r = (Button) findViewById(R.id.reload);
+        r.setVisibility(View.VISIBLE);
+        // Si no puedo cargar la lista de paises, borro el boton de buscar
+        TextView texto = (TextView) findViewById(R.id.listError);
+        texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        texto.setPadding(25,0,0,0);
+        texto.setText("No se pudo cargar la lista de paises");
+        texto.setVisibility(View.VISIBLE);
+        Button b = (Button) findViewById(R.id.buscar);
+        b.setVisibility(View.GONE);
+
     }
 
 //    private void animar(boolean mostrar)

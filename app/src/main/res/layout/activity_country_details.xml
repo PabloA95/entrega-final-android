@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CountryDetails">
+    tools:context=".CountryDetails"
+    android:background="@color/backgroudColor">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -14,7 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="10dp"
+            android:background="@color/backgroudColor">
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -27,7 +29,8 @@
                     android:id="@+id/pais"
                     android:textSize="45sp"
                     android:layout_marginStart="10dp"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:textColor="@color/textColor"/>
                 <ImageButton
                     android:onClick="toggleFav"
                     android:id="@+id/favIcon"
@@ -35,7 +38,7 @@
                     android:layout_width="45sp"
                     android:scaleType="fitCenter"
                     android:adjustViewBounds="true"
-                    android:background="#FFF"
+                    android:background="@android:color/transparent"
                     android:layout_alignParentRight="true"
                     android:layout_marginEnd="10dp">
                 </ImageButton>
@@ -46,7 +49,8 @@
                 android:id="@+id/fecha"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -54,49 +58,68 @@
                 android:id="@+id/totalActivos"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/totalConfirmados"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/totalMuertes"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/nuevosConfirmados"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/nuevosMuertes"
                 android:textSize="25sp"
                 android:layout_marginStart="10dp"
-                app:layout_constraintTop_toTopOf="parent" />
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:text="Volver"
-                android:onClick="volver"/>
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:layout_marginTop="25dp"
-                android:text="Compartir"
-                android:onClick="compartir"/>
-
+                app:layout_constraintTop_toTopOf="parent"
+                android:textColor="@color/textColor"/>
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:weightSum="2">
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <Button
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="10dp"
+                            android:text="Volver"
+                            android:onClick="volver"
+                            android:background="@color/darkOrange"
+                            android:layout_weight="1"
+                            android:textColor="@color/textColor"/>
+                        <Button
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="10dp"
+                            android:layout_marginTop="25dp"
+                            android:text="Compartir"
+                            android:onClick="compartir"
+                            android:background="@color/darkBlue"
+                            android:layout_weight="1"
+                            android:textColor="@color/textColor"/>
+                    </TableRow>
+                </TableLayout>
                 <LinearLayout
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 android:orientation="vertical"

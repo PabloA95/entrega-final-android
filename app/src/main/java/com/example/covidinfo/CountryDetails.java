@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,14 +23,12 @@ import com.android.volley.toolbox.Volley;
 import com.example.covidinfo.Database.AppDatabase;
 import com.example.covidinfo.Database.Country;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import org.json.JSONArray;
@@ -46,6 +46,7 @@ public class CountryDetails extends AppCompatActivity {
 
     ArrayList<Entry> x;
     ArrayList<Entry> x2;
+    ArrayList<Entry> x3;
     ArrayList<String> y;
     private LineChart mChart;
     public String TAG = "CountryDetails";
@@ -53,6 +54,8 @@ public class CountryDetails extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
+        getSupportActionBar().hide(); // hide the title bar
         setContentView(R.layout.activity_country_details);
 
         Bundle datos = getIntent().getExtras();
@@ -69,6 +72,7 @@ public class CountryDetails extends AppCompatActivity {
 
         x = new ArrayList<Entry>();
         x2 = new ArrayList<Entry>();
+        x3 = new ArrayList<Entry>();
         y = new ArrayList<String>();
         mChart = (LineChart) findViewById(R.id.chart1);
         mChart.setDrawGridBackground(false);
@@ -89,8 +93,6 @@ public class CountryDetails extends AppCompatActivity {
 //        leftAxis.setStartAtZero(true);
         leftAxis.setAxisMinimum(0);
         leftAxis.setTextColor(Color.WHITE);
-        //        leftAxis.setInverted(true);
-
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setEnabled(false);
         Legend l = mChart.getLegend();
@@ -203,8 +205,6 @@ public class CountryDetails extends AppCompatActivity {
 
     // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
                                 if (pais!=null && pais.getDate().before(utilDate)){ //
-//                                    Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
-//        -----------                       //REVISAR QUE ESTO ANDE BIEN
                                     pais.setTotalMuertes(jobj.getString("TotalDeaths"));
                                     pais.setTotalConfirmados(jobj.getString("TotalConfirmed"));
                                     pais.setTotalActivos(activos.toString());
@@ -221,6 +221,7 @@ public class CountryDetails extends AppCompatActivity {
                             // Cargar desde la db
                             // No va a estar en la db necesariamente si no es favorito...
                             if(pais!=null) {
+                                noChartData();
                                 cargarInfoDesdeDB(pais);
                             } else {
                                 errorAlCargar();
@@ -236,6 +237,7 @@ public class CountryDetails extends AppCompatActivity {
                 // Cargar desde la db
                 if(pais!=null) {
                     cargarInfoDesdeDB(pais);
+                    noChartData();
                 } else {
                     // No va a estar en la db necesariamente si no es favorito...
                     errorAlCargar();
@@ -313,10 +315,11 @@ public class CountryDetails extends AppCompatActivity {
                             try {
                                 JSONArray jsonArray = new JSONArray(response);
                                 if (jsonArray.length()>1) {
-//                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    for (int i = (jsonArray.length() < 200 ? jsonArray.length() : 200); i < jsonArray.length(); i++) {
+                                    for (int i = 0; i < jsonArray.length(); i++) {
+//                                    for (int i = (jsonArray.length() < 200 ? jsonArray.length() : 200); i < jsonArray.length(); i++) {
                                         int value = jsonArray.getJSONObject(i).getInt("Active");
                                         int value2 = jsonArray.getJSONObject(i).getInt("Deaths");
+                                        int value3 = jsonArray.getJSONObject(i).getInt("Confirmed");
                                         String date = jsonArray.getJSONObject(i).getString("Date");
                                         if (!date.equals("2021-03-07T00:00:00Z")) {
 //                                        date=date.replace("T"," ");
@@ -340,6 +343,7 @@ public class CountryDetails extends AppCompatActivity {
 //                                        // x.add(new Entry(value,i));
                                             x.add(new Entry(i, value));
                                             x2.add(new Entry(i, value2));
+                                            x3.add(new Entry(i, value3));
 //                                        y.add(fecha);
                                         }
                                     }
@@ -359,23 +363,31 @@ public class CountryDetails extends AppCompatActivity {
 //                                });
 
                                     LineDataSet set1 = new LineDataSet(x, "Casos activos");
-                                    set1.setLineWidth(2f);
-                                    set1.setCircleRadius(2.5f);
+                                    set1.setLineWidth(1.5f);
+                                    set1.setCircleRadius(2f);
                                     set1.setColor(Color.GREEN);
                                     set1.setCircleColor(Color.GREEN);
                                     set1.setFillColor(Color.GREEN);
                                     set1.setDrawValues(false);
                                     LineDataSet set2 = new LineDataSet(x2, "Cantidad muertos");
-                                    set2.setLineWidth(2f);
-                                    set2.setCircleRadius(2.5f);
+                                    set2.setLineWidth(1.5f);
+                                    set2.setCircleRadius(2f);
                                     set2.setColor(Color.RED);
                                     set2.setCircleColor(Color.RED);
                                     set2.setFillColor(Color.RED);
                                     set2.setDrawValues(false);
+                                    LineDataSet set3 = new LineDataSet(x3, "Cantidad confirmados");
+                                    set3.setLineWidth(1.5f);
+                                    set3.setCircleRadius(2f);
+                                    set3.setColor(Color.YELLOW);
+                                    set3.setCircleColor(Color.YELLOW);
+                                    set3.setFillColor(Color.YELLOW);
+                                    set3.setDrawValues(false);
 
                                     ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
                                     dataSets.add(set1); // add the datasets
                                     dataSets.add(set2);
+                                    dataSets.add(set3);
 
                                     // create a data object with the datasets
                                     LineData data = new LineData(dataSets);
@@ -390,6 +402,8 @@ public class CountryDetails extends AppCompatActivity {
 //                                LineData data = new LineData(y,set1);
 //                                mChart.setData(data);
 //                                mChart.invalidate();
+                                } else {
+                                    noChartData();
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -402,24 +416,16 @@ public class CountryDetails extends AppCompatActivity {
                     Log.e(TAG, "Error: " + error.getMessage());
                 }
             });
-//            strReq.setRetryPolicy(new RetryPolicy() {
-//
-//                @Override
-//                public void retry(VolleyError arg0) throws VolleyError {
-//                }
-//
-//                @Override
-//                public int getCurrentTimeout() {
-//                    return 0;
-//                }
-//
-//                @Override
-//                public int getCurrentRetryCount() {
-//                    return 0;
-//                }
-//            });
-//            strReq.setShouldCache(false);
             queue.add(strReq);
+        }
+
+        private void noChartData(){
+            com.github.mikephil.charting.charts.LineChart layout = findViewById(R.id.chart1);
+            // Gets the layout params that will allow you to resize the layout
+            ViewGroup.LayoutParams params = layout.getLayoutParams();
+            // Changes the height and width to the specified *pixels*
+            params.height = 150;
+            layout.setLayoutParams(params);
         }
 
 }
