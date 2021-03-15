@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Objects;
 import java.util.TimeZone;
 
 public class CountryDetails extends AppCompatActivity {
@@ -58,7 +59,7 @@ public class CountryDetails extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
-        getSupportActionBar().hide(); // hide the title bar
+        Objects.requireNonNull(getSupportActionBar()).hide(); // hide the title bar
         setContentView(R.layout.activity_country_details);
 
         Bundle datos = getIntent().getExtras();
@@ -79,22 +80,15 @@ public class CountryDetails extends AppCompatActivity {
         y = new ArrayList<String>();
         mChart = (LineChart) findViewById(R.id.chart1);
         mChart.setDrawGridBackground(false);
-//        mChart.setDescription("Covid");
         mChart.setTouchEnabled(true);
         mChart.setDragEnabled(true);
         mChart.setScaleEnabled(true);
         mChart.setPinchZoom(true);
-//        MarkerView mv = new MarkerView();
-//        // set the marker to the chart
-//        mChart.setMarkerView(mv);
         XAxis xl = mChart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setTextSize(15);
-//        xl.setAvoidFirstLastClipping(true);
         xl.setDrawAxisLine(true);
-//        xl.setDrawLabels(false); //labels
         YAxis leftAxis = mChart.getAxisLeft();
-//        leftAxis.setStartAtZero(true);
         leftAxis.setAxisMinimum(0);
         leftAxis.setTextColor(Color.WHITE);
         YAxis rightAxis = mChart.getAxisRight();
@@ -112,11 +106,11 @@ public class CountryDetails extends AppCompatActivity {
         Country country=db.countryDao().findByName((String) pais.getText());
         ImageButton favIcon = findViewById(R.id.favIcon);
         if(country==null) {
-            String totalActivos = ((TextView) findViewById(R.id.totalActivos)).getText().toString();
-            String totalConfirmados = ((TextView) findViewById(R.id.totalConfirmados)).getText().toString();
-            String totalMuertes = ((TextView) findViewById(R.id.totalMuertes)).getText().toString();
-            String nuevosConfirmados = ((TextView) findViewById(R.id.nuevosConfirmados)).getText().toString();
-            String nuevosMuertes = ((TextView) findViewById(R.id.nuevosMuertes)).getText().toString();
+            Long totalActivos = Long.valueOf(((TextView) findViewById(R.id.totalActivos)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long totalConfirmados = Long.valueOf(((TextView) findViewById(R.id.totalConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long totalMuertes = Long.valueOf(((TextView) findViewById(R.id.totalMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long nuevosConfirmados = Long.valueOf(((TextView) findViewById(R.id.nuevosConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long nuevosMuertes = Long.valueOf(((TextView) findViewById(R.id.nuevosMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
             Country c1 = new Country(pais.getText().toString(),totalActivos,totalConfirmados,totalMuertes,nuevosConfirmados,nuevosMuertes);
 
             String strDate = ((TextView) findViewById(R.id.fecha)).getText().toString();
@@ -176,18 +170,18 @@ public class CountryDetails extends AppCompatActivity {
                                 JSONObject jobj = jsonResponse.getJSONObject(i);
                                 Context context = getApplicationContext();
 
-                                TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
-                                TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
-                                TextView totalMuertes = (TextView) findViewById(R.id.totalMuertes);
-                                TextView nuevosConfirmados = (TextView) findViewById(R.id.nuevosConfirmados);
-                                TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
-                                TextView fecha = (TextView) findViewById(R.id.fecha);
+                                TextView totalActivos = findViewById(R.id.totalActivos);
+                                TextView totalConfirmados = findViewById(R.id.totalConfirmados);
+                                TextView totalMuertes = findViewById(R.id.totalMuertes);
+                                TextView nuevosConfirmados = findViewById(R.id.nuevosConfirmados);
+                                TextView nuevosMuertes = findViewById(R.id.nuevosMuertes);
+                                TextView fecha = findViewById(R.id.fecha);
                                 Long activos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
-                                totalActivos.setText("Activos totales: "+activos.toString());
-                                totalConfirmados.setText("Confirmados totales: "+jobj.getString("TotalConfirmed"));
-                                totalMuertes.setText("Muertes totales: "+jobj.getString("TotalDeaths"));
-                                nuevosConfirmados.setText("Nuevos confirmados: "+jobj.getString("NewConfirmed"));
-                                nuevosMuertes.setText("Nuevos muertos: "+jobj.getString("NewDeaths"));
+                                totalActivos.setText(getString(R.string.activosTotales)+activos.toString());
+                                totalConfirmados.setText(getString(R.string.confirmadosTotales)+jobj.getString("TotalConfirmed"));
+                                totalMuertes.setText(getString(R.string.muertesTotales)+jobj.getString("TotalDeaths"));
+                                nuevosConfirmados.setText(getString(R.string.nuevosConfirmados)+jobj.getString("NewConfirmed"));
+                                nuevosMuertes.setText(getString(R.string.nuevosMuertos)+jobj.getString("NewDeaths"));
 
                                 String strDate = jobj.getString("Date");
                                 strDate=strDate.replace("T"," ");
@@ -203,20 +197,20 @@ public class CountryDetails extends AppCompatActivity {
                                 }
                                 Calendar calendar = new GregorianCalendar();
                                 calendar.setTime(utilDate);
-                                Integer year = calendar.get(Calendar.YEAR);
-                                Integer month = calendar.get(Calendar.MONTH) + 1;
-                                Integer day = calendar.get(Calendar.DAY_OF_MONTH);
-                                Integer hour = calendar.get(Calendar.HOUR);
-                                Integer minute = calendar.get(Calendar.MINUTE);
-                                fecha.setText(day.toString()+"/"+month.toString()+"/"+year.toString()+" "+hour.toString()+":"+minute.toString());
+                                int year = calendar.get(Calendar.YEAR);
+                                int month = calendar.get(Calendar.MONTH) + 1;
+                                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                                int hour = calendar.get(Calendar.HOUR);
+                                int minute = calendar.get(Calendar.MINUTE);
+                                fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
 
     // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
                                 if (pais!=null && pais.getDate().before(utilDate)){ //
-                                    pais.setTotalMuertes(jobj.getString("TotalDeaths"));
-                                    pais.setTotalConfirmados(jobj.getString("TotalConfirmed"));
-                                    pais.setTotalActivos(activos.toString());
-                                    pais.setNuevosMuertes(jobj.getString("NewDeaths"));
-                                    pais.setNuevosConfirmados(jobj.getString("NewConfirmed"));
+                                    pais.setTotalMuertes(jobj.getLong("TotalDeaths"));
+                                    pais.setTotalConfirmados(jobj.getLong("TotalConfirmed"));
+                                    pais.setTotalActivos(activos);
+                                    pais.setNuevosMuertes(jobj.getLong("NewDeaths"));
+                                    pais.setNuevosConfirmados(jobj.getLong("NewConfirmed"));
                                     java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
                                     pais.setDate(sqlDate);
                                     AppDatabase db = AppDatabase.getInstance(getApplicationContext());
@@ -233,7 +227,6 @@ public class CountryDetails extends AppCompatActivity {
                             } else {
                                 errorAlCargar();
                             }
-//                            errorAlCargar();
                             Toast.makeText(getApplicationContext(), "Error3", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
@@ -265,11 +258,11 @@ public class CountryDetails extends AppCompatActivity {
             TextView nuevosMuertes = (TextView) findViewById(R.id.nuevosMuertes);
             TextView fecha = (TextView) findViewById(R.id.fecha);
 
-            totalActivos.setText(pais.getTotalActivos());
-            totalConfirmados.setText(pais.getTotalConfirmados());
-            totalMuertes.setText(pais.getTotalMuertes());
-            nuevosConfirmados.setText(pais.getNuevosConfirmados());
-            nuevosMuertes.setText(pais.getNuevosMuertes());
+            totalActivos.setText(getString(R.string.activosTotales)+ pais.getTotalActivos().toString());
+            totalConfirmados.setText(getString(R.string.confirmadosTotales)+pais.getTotalConfirmados().toString());
+            totalMuertes.setText(getString(R.string.muertesTotales)+pais.getTotalMuertes().toString());
+            nuevosConfirmados.setText(getString(R.string.nuevosConfirmados)+pais.getNuevosConfirmados().toString());
+            nuevosMuertes.setText(getString(R.string.nuevosMuertos)+pais.getNuevosMuertes().toString());
 
             java.sql.Date sqlDate = pais.getDate();
             Date utilDate = new Date(sqlDate.getTime());
@@ -280,12 +273,12 @@ public class CountryDetails extends AppCompatActivity {
             Integer day = calendar.get(Calendar.DAY_OF_MONTH);
             Integer hour = calendar.get(Calendar.HOUR);
             Integer minute = calendar.get(Calendar.MINUTE);
-            fecha.setText(day.toString() + "/" + month.toString() + "/" + year.toString() + " " + hour.toString() + ":" + minute.toString());
+            fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
         }
     }
 
     private void errorAlCargar(){
-        Toast.makeText(getApplicationContext(), "No se pudo obtener la info del pais", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), getString(R.string.errorInfoPais), Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
@@ -302,9 +295,9 @@ public class CountryDetails extends AppCompatActivity {
         mensaje = mensaje + "\n" + ((TextView) findViewById(R.id.nuevosConfirmados)).getText();
         mensaje = mensaje + "\n" + ((TextView) findViewById(R.id.nuevosMuertes)).getText();
         TextView fecha = (TextView) findViewById(R.id.fecha);
-        compartir.putExtra(android.content.Intent.EXTRA_SUBJECT, "Info actual del Covid19 en "+ ((TextView)findViewById(R.id.pais)).getText().toString());
+        compartir.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.subjectCompartir)+ ((TextView)findViewById(R.id.pais)).getText().toString());
         compartir.putExtra(android.content.Intent.EXTRA_TEXT, mensaje);
-        startActivity(Intent.createChooser(compartir, "Compartir vía"));
+        startActivity(Intent.createChooser(compartir, getString(R.string.tituloCompartir)));
     }
 
     public void drawChart() {
@@ -342,13 +335,9 @@ public class CountryDetails extends AppCompatActivity {
                                             x.add(new Entry(utilDate.getTime(), value));
                                             x2.add(new Entry(utilDate.getTime(), value2));
                                             x3.add(new Entry(utilDate.getTime(), value3));
-//                                        y.add(fecha);
                                         }
                                     }
 
-//                                final ArrayList<String> xLabel = new ArrayList<>();
-//                                xLabel.add(y.get(0));
-//                                xLabel.add(y.get(y.size()-1));
 
                                 XAxis xAxis = mChart.getXAxis();
 //                                xAxis.setGranularityEnabled(true);
@@ -403,8 +392,6 @@ public class CountryDetails extends AppCompatActivity {
                                     data.setValueTextColor(Color.WHITE);
                                     data.setValueTextSize(9f);
 
-//                                mChart.highlightValue(null);
-                                    // set data
                                     mChart.setData(data);
                                     mChart.invalidate();
 

@@ -17,15 +17,15 @@ public class Country {
     private String name;
 
     @ColumnInfo(name = "totalActivos")
-    private String totalActivos;
+    private Long totalActivos;
     @ColumnInfo(name = "totalConfirmados")
-    private String totalConfirmados;
+    private Long totalConfirmados;
     @ColumnInfo(name = "totalMuertes")
-    private String totalMuertes;
+    private Long totalMuertes;
     @ColumnInfo(name = "nuevosConfirmados")
-    private String nuevosConfirmados;
+    private Long nuevosConfirmados;
     @ColumnInfo(name = "nuevosMuertes")
-    private String nuevosMuertes;
+    private Long nuevosMuertes;
 
 
     @ColumnInfo(name = "date")
@@ -40,7 +40,7 @@ public class Country {
         name=nameParameter;
     }
 
-    public Country(String name, String totalActivos, String totalConfirmados, String totalMuertes, String nuevosConfirmados, String nuevosMuertes) {
+    public Country(String name, Long totalActivos, Long totalConfirmados, Long totalMuertes, Long nuevosConfirmados, Long nuevosMuertes) {
         this.name = name;
         this.totalActivos = totalActivos;
         this.totalConfirmados = totalConfirmados;
@@ -73,43 +73,43 @@ public class Country {
         return date;
     }
 
-    public String getTotalActivos() {
+    public Long getTotalActivos() {
         return totalActivos;
     }
 
-    public void setTotalActivos(String totalActivos) {
+    public void setTotalActivos(Long totalActivos) {
         this.totalActivos = totalActivos;
     }
 
-    public String getTotalConfirmados() {
+    public Long getTotalConfirmados() {
         return totalConfirmados;
     }
 
-    public void setTotalConfirmados(String totalConfirmados) {
+    public void setTotalConfirmados(Long totalConfirmados) {
         this.totalConfirmados = totalConfirmados;
     }
 
-    public String getTotalMuertes() {
+    public Long getTotalMuertes() {
         return totalMuertes;
     }
 
-    public void setTotalMuertes(String totalMuertes) {
+    public void setTotalMuertes(Long totalMuertes) {
         this.totalMuertes = totalMuertes;
     }
 
-    public String getNuevosConfirmados() {
+    public Long getNuevosConfirmados() {
         return nuevosConfirmados;
     }
 
-    public void setNuevosConfirmados(String nuevosConfirmados) {
+    public void setNuevosConfirmados(Long nuevosConfirmados) {
         this.nuevosConfirmados = nuevosConfirmados;
     }
 
-    public String getNuevosMuertes() {
+    public Long getNuevosMuertes() {
         return nuevosMuertes;
     }
 
-    public void setNuevosMuertes(String nuevosMuertes) {
+    public void setNuevosMuertes(Long nuevosMuertes) {
         this.nuevosMuertes = nuevosMuertes;
     }
 

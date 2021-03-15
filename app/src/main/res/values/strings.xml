@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">CovidInfo</string>
+    <string name="activosTotales">"Activos totales: "</string>
+    <string name="confirmadosTotales">"Confirmados totales: "</string>
+    <string name="muertesTotales">"Muertes totales: "</string>
+    <string name="nuevosConfirmados">"Nuevos confirmados: "</string>
+    <string name="nuevosMuertos">"Nuevos muertos: "</string>
+    <string name="errorCargarLista">"No se pudo cargar la lista de paises"</string>
+    <string name="paisAgregado">"Agregado a favoritos"</string>
+    <string name="paisEliminado">"Eliminado de favoritos"</string>
+    <string name="errorRespuestaServidor">"Error en la respuesta del servidor"</string>
+    <string name="errorCargarListaPaises">"Error al cargar la lista de paises"</string>
+    <string name="jsonArrayVacio">"No se pudo actualizar los datos"</string>
+    <string name="jsonException">"No se pudo actualizar los datos, error1"</string>
+    <string name="volleryError">"No se pudo actualizar los datos, error2"</string>
+    <string name="errorInfoPais">No se pudo obtener la info del pais</string>
+    <string name="tituloCompartir">Compartir vía</string>
+    <string name="subjectCompartir">\"Info actual del Covid19 en \"</string>
 </resources>

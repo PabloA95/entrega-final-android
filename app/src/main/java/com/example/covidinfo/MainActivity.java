@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Objects;
 import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,26 +50,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
-        getSupportActionBar().hide(); // hide the title bar
+        Objects.requireNonNull(getSupportActionBar()).hide(); // hide the title bar
         setContentView(R.layout.activity_main);
         queue = Volley.newRequestQueue(this);
         queue.start();
 
         this.searchCountriesList();
-//        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name").fallbackToDestructiveMigration().allowMainThreadQueries().build();
         AppDatabase db = AppDatabase.getInstance(this);
         List<Country> list=db.countryDao().getAllOrderByName();
-//        db.countryDao().nukeTable();
+
+        // Test
         if(list.isEmpty()) {
-            Country c1 = new Country("Argentina","0","0","0","0","0");
-            Country c2 = new Country("Brazil","3","7","1","2","1");
+            Country c1 = new Country("Argentina",0L,0L,0L,0L,0L);
+            Country c2 = new Country("Brazil",3L,7L,1L,2L,1L);
             c1.setDate(new java.sql.Date(new Date().getTime()));
             c2.setDate(new java.sql.Date(new Date().getTime()));
             db.countryDao().insertAll(c1, c2);
             list=db.countryDao().getAll();
         }
+
         this.searchFavsInfo(list);
-//        db.close();
     }
 
     private void searchFavsInfo(final List<Country> list) {
@@ -95,12 +96,13 @@ public class MainActivity extends AppCompatActivity {
 
                                         // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
                                         JSONObject jobj = jsonResponse.getJSONObject(i);
-                                        long totalActivos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
-                                        String totalConfirmadosStr = "Confirmados totales: "+jobj.getString("TotalConfirmed");
-                                        String totalMuertesStr = "Muertes totales: "+jobj.getString("TotalDeaths");
-                                        String nuevosConfirmadosStr = "Nuevos confirmados: "+jobj.getString("NewConfirmed");
-                                        String nuevosMuertesStr = "Nuevos muertos: "+jobj.getString("NewDeaths");
-                                        Country countryAux = new Country(c.getName(),"Activos totales: "+ totalActivos,totalConfirmadosStr,totalMuertesStr,nuevosConfirmadosStr,nuevosMuertesStr);
+                                        long totalConfirmados = jobj.getLong("TotalConfirmed");
+                                        long totalMuertes = jobj.getLong("TotalDeaths");
+                                        long nuevosConfirmados = jobj.getLong("NewConfirmed");
+                                        long nuevosMuertes = jobj.getLong("NewDeaths");
+                                        long totalActivos = totalConfirmados - totalMuertes - jobj.getLong("TotalRecovered");
+//NECESITO CREAR UN OBJETO NUEVO? REVISAR ESTO -> EN C TENGO EL OBJETO...
+                                        Country countryAux = new Country(c.getName(),totalActivos,totalConfirmados,totalMuertes,nuevosConfirmados,nuevosMuertes);
                                         String strDate = jobj.getString("Date");
                                         strDate=strDate.replace("T"," ");
                                         strDate=strDate.replace("Z","");
@@ -109,18 +111,18 @@ public class MainActivity extends AppCompatActivity {
                                             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
                                             format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
                                             utilDate = format.parse(strDate);
+                                            Calendar calendar = new GregorianCalendar();
+                                            calendar.setTime(utilDate);
                                         }
                                         catch(ParseException pe) {
                                             throw new IllegalArgumentException(pe);
                                         }
-                                        Calendar calendar = new GregorianCalendar();
-                                        calendar.setTime(utilDate);
                                         java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
                                         countryAux.setDate(sqlDate);
 
                                         crearViewParaPais(countryAux,i,favs,context);
 
-//                                         Actualizar solo si los datos son mas nuevos
+//                                      Actualizar solo si los datos son mas nuevos
                                         if (c.getDate() != null && c.getDate().before(utilDate)){
                                             Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
 
@@ -130,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                                             c.setTotalActivos(countryAux.getTotalActivos());
                                             c.setNuevosMuertes(countryAux.getNuevosMuertes());
                                             c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
-//                                            java.sql.Date sqlDate = countryAux.getDate();
                                             c.setDate(countryAux.getDate());
                                             db.countryDao().updateCountry(c);
                                         }
@@ -138,12 +139,12 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     // Si el json esta vacio, cargo los datos de la DB
                                     cargarDesdeDB(list);
-                                    Toast.makeText(getApplicationContext(), "No se pudo actualizar los datos", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), getString(R.string.jsonArrayVacio), Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException e) {
                                 // Si el ocurre un error, cargo los datos de la DB
                                 cargarDesdeDB(list);
-                                Toast.makeText(getApplicationContext(), "No se pudo actualizar los datos, error1", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), getString(R.string.jsonException), Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
                             }
                         }
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onErrorResponse(VolleyError error) {
                     // Si el servidor responde con un error, cargo los datos de la DB
                     cargarDesdeDB(list);
-                    Toast.makeText(getApplicationContext(), "No se pudo actualizar los datos, error2", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.volleryError), Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                             ((TextView) findViewById(R.id.listError)).setVisibility(View.GONE);
                         } catch (JSONException e) {
                             errorCargandoLaLista();
-                            Toast.makeText(getApplicationContext(),"Error al cargar la lista de paises", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.errorCargarListaPaises), Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }
@@ -198,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 // Si el servidor responde con un error, borro el boton de buscar
                 errorCargandoLaLista();
-                Toast.makeText(getApplicationContext(),"Error en la respuesta del servidor", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), getString(R.string.errorRespuestaServidor), Toast.LENGTH_SHORT).show();
             }
         });
         // Add the request to the RequestQueue.
@@ -287,11 +288,11 @@ public class MainActivity extends AppCompatActivity {
                 if(country==null) {
                     db.countryDao().insert(c);
                     favIcon.setImageResource(R.drawable.si);
-                    Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.paisAgregado), Toast.LENGTH_SHORT).show();
                 } else {
                     db.countryDao().delete(country);
                     favIcon.setImageResource(R.drawable.no);
-                    Toast.makeText(getApplicationContext(), "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.paisEliminado), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -353,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
         totalConfirmados.setLayoutParams(dataParams);
         totalMuertes.setLayoutParams(dataParams);
         nuevosConfirmados.setLayoutParams(dataParams);
+
         titleView.setTextSize(textSize+10);
         dateView.setTextSize(textSize+5);
         nuevosMuertes.setTextSize(textSize);
@@ -360,12 +362,13 @@ public class MainActivity extends AppCompatActivity {
         totalConfirmados.setTextSize(textSize);
         totalMuertes.setTextSize(textSize);
         nuevosConfirmados.setTextSize(textSize);
-        //ACTUALIZAR LOS DATOS DE LOS FAVORITOS
-        totalActivos.setText(c.getTotalActivos());
-        totalConfirmados.setText(c.getTotalConfirmados());
-        totalMuertes.setText(c.getTotalMuertes());
-        nuevosConfirmados.setText(c.getNuevosConfirmados());
-        nuevosMuertes.setText(c.getNuevosMuertes());
+
+        totalActivos.setText(getString(R.string.activosTotales)+c.getTotalActivos());
+        totalConfirmados.setText(getString(R.string.confirmadosTotales)+c.getTotalConfirmados());
+        totalMuertes.setText(getString(R.string.muertesTotales)+c.getTotalMuertes());
+        nuevosConfirmados.setText(getString(R.string.nuevosConfirmados)+c.getNuevosConfirmados());
+        nuevosMuertes.setText(getString(R.string.nuevosMuertos)+c.getNuevosMuertes());
+
         layoutContent.addView(totalActivos);
         layoutContent.addView(totalConfirmados);
         layoutContent.addView(totalMuertes);
@@ -384,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
         TextView texto = (TextView) findViewById(R.id.listError);
         texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         texto.setPadding(25,0,0,0);
-        texto.setText("No se pudo cargar la lista de paises");
+        texto.setText(getString(R.string.errorCargarLista));
         texto.setVisibility(View.VISIBLE);
         Button b = (Button) findViewById(R.id.buscar);
         b.setVisibility(View.GONE);
