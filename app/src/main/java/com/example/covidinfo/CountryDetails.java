@@ -23,12 +23,14 @@ import com.android.volley.toolbox.Volley;
 import com.example.covidinfo.Database.AppDatabase;
 import com.example.covidinfo.Database.Country;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import org.json.JSONArray;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class CountryDetails extends AppCompatActivity {
 
@@ -86,9 +89,10 @@ public class CountryDetails extends AppCompatActivity {
 //        mChart.setMarkerView(mv);
         XAxis xl = mChart.getXAxis();
         xl.setTextColor(Color.WHITE);
-        xl.setAvoidFirstLastClipping(true);
+        xl.setTextSize(15);
+//        xl.setAvoidFirstLastClipping(true);
         xl.setDrawAxisLine(true);
-        xl.setDrawLabels(false);
+//        xl.setDrawLabels(false); //labels
         YAxis leftAxis = mChart.getAxisLeft();
 //        leftAxis.setStartAtZero(true);
         leftAxis.setAxisMinimum(0);
@@ -98,6 +102,8 @@ public class CountryDetails extends AppCompatActivity {
         Legend l = mChart.getLegend();
         l.setForm(Legend.LegendForm.LINE);
         l.setTextColor(Color.WHITE);
+        l.setTextSize(15);
+        l.setXOffset(15);
     }
 
     public void toggleFav(View view) {
@@ -189,6 +195,7 @@ public class CountryDetails extends AppCompatActivity {
                                 Date utilDate; // = new Date(strDate);
                                 try {
                                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                    format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
                                     utilDate = format.parse(strDate);
                                 }
                                 catch(ParseException pe) {
@@ -303,7 +310,6 @@ public class CountryDetails extends AppCompatActivity {
     public void drawChart() {
 //        private void drawChart() {
             final RequestQueue queue = Volley.newRequestQueue(this);
-
 //            String tag_string_req = "req_chart";
             String pais =((TextView)findViewById(R.id.pais)).getText().toString();
             StringRequest strReq = new StringRequest(Request.Method.GET, "https://api.covid19api.com/total/dayone/country/"+pais,
@@ -322,28 +328,20 @@ public class CountryDetails extends AppCompatActivity {
                                         int value3 = jsonArray.getJSONObject(i).getInt("Confirmed");
                                         String date = jsonArray.getJSONObject(i).getString("Date");
                                         if (!date.equals("2021-03-07T00:00:00Z")) {
-//                                        date=date.replace("T"," ");
-//                                        date=date.replace("Z","");
-//                                        Date utilDate; // = new Date(strDate);
-//                                        try {
-//                                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
-//                                            utilDate = format.parse(date);
-//                                        }
-//                                        catch(ParseException pe) {
-//                                            throw new IllegalArgumentException(pe);
-//                                        }
-//                                        Calendar calendar = new GregorianCalendar();
-//                                        calendar.setTime(utilDate);
-//                                        int year = calendar.get(Calendar.YEAR);
-//                                        int month = calendar.get(Calendar.MONTH) + 1;
-//                                        int day = calendar.get(Calendar.DAY_OF_MONTH);
-//                                        String fecha = day +"/"+month +"/"+year;
-//                                        // new Entry() invierte los parametros en la version 2
-//                                        // v2.2.3 -> new Entry(value,i)
-//                                        // x.add(new Entry(value,i));
-                                            x.add(new Entry(i, value));
-                                            x2.add(new Entry(i, value2));
-                                            x3.add(new Entry(i, value3));
+                                            date=date.replace("T"," ");
+                                            date=date.replace("Z","");
+                                            Date utilDate; // = new Date(strDate);
+                                            try {
+                                                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                                utilDate = format.parse(date);
+                                            }
+                                            catch(ParseException pe) {
+                                                throw new IllegalArgumentException(pe);
+                                            }
+
+                                            x.add(new Entry(utilDate.getTime(), value));
+                                            x2.add(new Entry(utilDate.getTime(), value2));
+                                            x3.add(new Entry(utilDate.getTime(), value3));
 //                                        y.add(fecha);
                                         }
                                     }
@@ -351,32 +349,43 @@ public class CountryDetails extends AppCompatActivity {
 //                                final ArrayList<String> xLabel = new ArrayList<>();
 //                                xLabel.add(y.get(0));
 //                                xLabel.add(y.get(y.size()-1));
-//                                XAxis xAxis = mChart.getXAxis();
-//                                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-//                                xAxis.setDrawGridLines(false);
-//                                xAxis.setLabelCount(12, true);
-//                                xAxis.setValueFormatter(new IAxisValueFormatter() {
-//                                    @Override
-//                                    public String getFormattedValue(float value, AxisBase axis) {
-//                                        return xLabel.get((int)value);
-//                                    }
-//                                });
 
-                                    LineDataSet set1 = new LineDataSet(x, "Casos activos");
+                                XAxis xAxis = mChart.getXAxis();
+//                                xAxis.setGranularityEnabled(true);
+//                                xAxis.setGranularity(100);
+//                                xAxis.setLabelCount(450, /*force: */true);
+                                xAxis.setLabelRotationAngle(-45);
+                                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                                xAxis.setDrawGridLines(false);
+                                xAxis.setLabelCount(12, true);
+                                xAxis.setValueFormatter(new IAxisValueFormatter() {
+                                    @Override
+                                    public String getFormattedValue(float value, AxisBase axis) {
+                                        Calendar calendar = new GregorianCalendar();
+                                        calendar.setTime(new Date((long)value));
+                                        int year = calendar.get(Calendar.YEAR);
+                                        int month = calendar.get(Calendar.MONTH) + 1;
+                                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                                        String aux = day+"/"+month+"/"+year;
+                                        return aux;
+                                    }
+                                });
+
+                                    LineDataSet set1 = new LineDataSet(x, "Activos");
                                     set1.setLineWidth(1.5f);
                                     set1.setCircleRadius(2f);
                                     set1.setColor(Color.GREEN);
                                     set1.setCircleColor(Color.GREEN);
                                     set1.setFillColor(Color.GREEN);
                                     set1.setDrawValues(false);
-                                    LineDataSet set2 = new LineDataSet(x2, "Cantidad muertos");
+                                    LineDataSet set2 = new LineDataSet(x2, "Muertos");
                                     set2.setLineWidth(1.5f);
                                     set2.setCircleRadius(2f);
                                     set2.setColor(Color.RED);
                                     set2.setCircleColor(Color.RED);
                                     set2.setFillColor(Color.RED);
                                     set2.setDrawValues(false);
-                                    LineDataSet set3 = new LineDataSet(x3, "Cantidad confirmados");
+                                    LineDataSet set3 = new LineDataSet(x3, "Confirmados");
                                     set3.setLineWidth(1.5f);
                                     set3.setCircleRadius(2f);
                                     set3.setColor(Color.YELLOW);

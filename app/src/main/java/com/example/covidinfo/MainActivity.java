@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -106,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
                                         Date utilDate; // = new Date(strDate);
                                         try {
                                             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                            format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
                                             utilDate = format.parse(strDate);
                                         }
                                         catch(ParseException pe) {
@@ -177,9 +179,10 @@ public class MainActivity extends AppCompatActivity {
 
                             Spinner s = (Spinner) findViewById(R.id.countries);
                             Collections.sort(countriesSpinner);
+//  spinner.setAdapter(new ArrayAdapter<String>(this, R.layout.textview_spinner, valores));
                             ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),
-                                    android.R.layout.simple_spinner_item, countriesSpinner);
-                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                                    R.layout.spinner_style, countriesSpinner);
+                            adapter.setDropDownViewResource(R.layout.spinner_style);
                             s.setAdapter(adapter);
                             ((Button) findViewById(R.id.buscar)).setVisibility(View.VISIBLE);
                             ((Button) findViewById(R.id.reload)).setVisibility(View.GONE);
