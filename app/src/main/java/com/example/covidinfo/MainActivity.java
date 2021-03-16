@@ -89,51 +89,56 @@ public class MainActivity extends AppCompatActivity {
                                     int i=0;
                                     AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                                     Context context = getApplicationContext();
+                                    String auxCountry = jsonResponse.getJSONObject(0).getString("Country");
                                     for (final Country c:list){
-                                        while ((i <jsonResponse.length()-1) && !jsonResponse.getJSONObject(i).getString("Country").equals(c.getName())){
+                                        while ((i <jsonResponse.length()-1) && !auxCountry.equals(c.getName()) && (auxCountry.compareTo(c.getName())<0)){
                                             i++;
+                                            auxCountry = jsonResponse.getJSONObject(i).getString("Country");
                                         }
 
-                                        // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
-                                        JSONObject jobj = jsonResponse.getJSONObject(i);
-                                        long totalConfirmados = jobj.getLong("TotalConfirmed");
-                                        long totalMuertes = jobj.getLong("TotalDeaths");
-                                        long nuevosConfirmados = jobj.getLong("NewConfirmed");
-                                        long nuevosMuertes = jobj.getLong("NewDeaths");
-                                        long totalActivos = totalConfirmados - totalMuertes - jobj.getLong("TotalRecovered");
+                                        if (auxCountry.equals(c.getName())) {
+                                            // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
+                                            JSONObject jobj = jsonResponse.getJSONObject(i);
+                                            long totalConfirmados = jobj.getLong("TotalConfirmed");
+                                            long totalMuertes = jobj.getLong("TotalDeaths");
+                                            long nuevosConfirmados = jobj.getLong("NewConfirmed");
+                                            long nuevosMuertes = jobj.getLong("NewDeaths");
+                                            long totalActivos = totalConfirmados - totalMuertes - jobj.getLong("TotalRecovered");
 //NECESITO CREAR UN OBJETO NUEVO? REVISAR ESTO -> EN C TENGO EL OBJETO...
-                                        Country countryAux = new Country(c.getName(),totalActivos,totalConfirmados,totalMuertes,nuevosConfirmados,nuevosMuertes);
-                                        String strDate = jobj.getString("Date");
-                                        strDate=strDate.replace("T"," ");
-                                        strDate=strDate.replace("Z","");
-                                        Date utilDate; // = new Date(strDate);
-                                        try {
-                                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
-                                            format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
-                                            utilDate = format.parse(strDate);
-                                            Calendar calendar = new GregorianCalendar();
-                                            calendar.setTime(utilDate);
-                                        }
-                                        catch(ParseException pe) {
-                                            throw new IllegalArgumentException(pe);
-                                        }
-                                        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                                        countryAux.setDate(sqlDate);
+                                            Country countryAux = new Country(c.getName(), totalActivos, totalConfirmados, totalMuertes, nuevosConfirmados, nuevosMuertes);
+                                            String strDate = jobj.getString("Date");
+                                            strDate = strDate.replace("T", " ");
+                                            strDate = strDate.replace("Z", "");
+                                            Date utilDate; // = new Date(strDate);
+                                            try {
+                                                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                                format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
+                                                utilDate = format.parse(strDate);
+                                                Calendar calendar = new GregorianCalendar();
+                                                calendar.setTime(utilDate);
+                                            } catch (ParseException pe) {
+                                                throw new IllegalArgumentException(pe);
+                                            }
+                                            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                                            countryAux.setDate(sqlDate);
 
-                                        crearViewParaPais(countryAux,i,favs,context);
+                                            crearViewParaPais(countryAux, i, favs, context);
 
 //                                      Actualizar solo si los datos son mas nuevos
-                                        if (c.getDate() != null && c.getDate().before(utilDate)){
-                                            Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
+                                            if (c.getDate() != null && c.getDate().before(utilDate)) {
+                                                Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
 
 //        -----------                       //REVISAR QUE ESTO ANDE BIEN
-                                            c.setTotalMuertes(countryAux.getTotalMuertes());
-                                            c.setTotalConfirmados(countryAux.getTotalConfirmados());
-                                            c.setTotalActivos(countryAux.getTotalActivos());
-                                            c.setNuevosMuertes(countryAux.getNuevosMuertes());
-                                            c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
-                                            c.setDate(countryAux.getDate());
-                                            db.countryDao().updateCountry(c);
+                                                c.setTotalMuertes(countryAux.getTotalMuertes());
+                                                c.setTotalConfirmados(countryAux.getTotalConfirmados());
+                                                c.setTotalActivos(countryAux.getTotalActivos());
+                                                c.setNuevosMuertes(countryAux.getNuevosMuertes());
+                                                c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
+                                                c.setDate(countryAux.getDate());
+                                                db.countryDao().updateCountry(c);
+                                            }
+                                        } else {
+                                            Toast.makeText(getApplicationContext(), "Error al recuperar la informacion de "+auxCountry, Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 } else {

@@ -69,7 +69,7 @@ public class CountryDetails extends AppCompatActivity {
             TextView pais = (TextView)findViewById(R.id.pais);
             pais.setText(countryName);
         } else {
-            errorAlCargar();
+            errorAlCargar(getString(R.string.errorInfoPais));
         }
 
         this.searchFavInfo();
@@ -162,59 +162,72 @@ public class CountryDetails extends AppCompatActivity {
                         try {
                             jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
                             if (jsonResponse.length() > 0) {
+                                String auxCountry = jsonResponse.getJSONObject(0).getString("Country");
                                 int i = 0;
-                                while ((i < jsonResponse.length() - 1) && !jsonResponse.getJSONObject(i).getString("Country").equals(country)) {
+                                while ((i <jsonResponse.length()-1) && !auxCountry.equals(country) && (auxCountry.compareTo(country)<0)){
                                     i++;
+                                    auxCountry = jsonResponse.getJSONObject(i).getString("Country");
                                 }
-                                // CONTROLAR SI POR MOTIVO RARO NO LO ENCUENTRA
-                                JSONObject jobj = jsonResponse.getJSONObject(i);
-                                Context context = getApplicationContext();
+                                if (auxCountry.equals(country)) {
+                                    // CONTROLAR SI POR MOTIVO RARO NO LO ENCUENTRA
+                                    JSONObject jobj = jsonResponse.getJSONObject(i);
+                                    Context context = getApplicationContext();
 
-                                TextView totalActivos = findViewById(R.id.totalActivos);
-                                TextView totalConfirmados = findViewById(R.id.totalConfirmados);
-                                TextView totalMuertes = findViewById(R.id.totalMuertes);
-                                TextView nuevosConfirmados = findViewById(R.id.nuevosConfirmados);
-                                TextView nuevosMuertes = findViewById(R.id.nuevosMuertes);
-                                TextView fecha = findViewById(R.id.fecha);
-                                Long activos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
-                                totalActivos.setText(getString(R.string.activosTotales)+activos.toString());
-                                totalConfirmados.setText(getString(R.string.confirmadosTotales)+jobj.getString("TotalConfirmed"));
-                                totalMuertes.setText(getString(R.string.muertesTotales)+jobj.getString("TotalDeaths"));
-                                nuevosConfirmados.setText(getString(R.string.nuevosConfirmados)+jobj.getString("NewConfirmed"));
-                                nuevosMuertes.setText(getString(R.string.nuevosMuertos)+jobj.getString("NewDeaths"));
+                                    TextView totalActivos = findViewById(R.id.totalActivos);
+                                    TextView totalConfirmados = findViewById(R.id.totalConfirmados);
+                                    TextView totalMuertes = findViewById(R.id.totalMuertes);
+                                    TextView nuevosConfirmados = findViewById(R.id.nuevosConfirmados);
+                                    TextView nuevosMuertes = findViewById(R.id.nuevosMuertes);
+                                    TextView fecha = findViewById(R.id.fecha);
+                                    Long activos = jobj.getLong("TotalConfirmed") - jobj.getLong("TotalDeaths") - jobj.getLong("TotalRecovered");
+                                    totalActivos.setText(getString(R.string.activosTotales) + activos.toString());
+                                    totalConfirmados.setText(getString(R.string.confirmadosTotales) + jobj.getString("TotalConfirmed"));
+                                    totalMuertes.setText(getString(R.string.muertesTotales) + jobj.getString("TotalDeaths"));
+                                    nuevosConfirmados.setText(getString(R.string.nuevosConfirmados) + jobj.getString("NewConfirmed"));
+                                    nuevosMuertes.setText(getString(R.string.nuevosMuertos) + jobj.getString("NewDeaths"));
 
-                                String strDate = jobj.getString("Date");
-                                strDate=strDate.replace("T"," ");
-                                strDate=strDate.replace("Z","");
-                                Date utilDate; // = new Date(strDate);
-                                try {
-                                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
-                                    format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
-                                    utilDate = format.parse(strDate);
+                                    String strDate = jobj.getString("Date");
+                                    strDate = strDate.replace("T", " ");
+                                    strDate = strDate.replace("Z", "");
+                                    Date utilDate; // = new Date(strDate);
+                                    try {
+                                        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                        format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
+                                        utilDate = format.parse(strDate);
+                                    } catch (ParseException pe) {
+                                        throw new IllegalArgumentException(pe);
+                                    }
+                                    Calendar calendar = new GregorianCalendar();
+                                    calendar.setTime(utilDate);
+                                    int year = calendar.get(Calendar.YEAR);
+                                    int month = calendar.get(Calendar.MONTH) + 1;
+                                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                                    int hour = calendar.get(Calendar.HOUR);
+                                    int minute = calendar.get(Calendar.MINUTE);
+                                    fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
+
+                                    // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
+                                    if (pais != null && pais.getDate().before(utilDate)) { //
+                                        pais.setTotalMuertes(jobj.getLong("TotalDeaths"));
+                                        pais.setTotalConfirmados(jobj.getLong("TotalConfirmed"));
+                                        pais.setTotalActivos(activos);
+                                        pais.setNuevosMuertes(jobj.getLong("NewDeaths"));
+                                        pais.setNuevosConfirmados(jobj.getLong("NewConfirmed"));
+                                        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                                        pais.setDate(sqlDate);
+                                        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                                        db.countryDao().updateCountry(pais);
+                                    }
+                                } else {
+                                    errorAlCargar("Error al recuperar la informacion de "+country);
                                 }
-                                catch(ParseException pe) {
-                                    throw new IllegalArgumentException(pe);
-                                }
-                                Calendar calendar = new GregorianCalendar();
-                                calendar.setTime(utilDate);
-                                int year = calendar.get(Calendar.YEAR);
-                                int month = calendar.get(Calendar.MONTH) + 1;
-                                int day = calendar.get(Calendar.DAY_OF_MONTH);
-                                int hour = calendar.get(Calendar.HOUR);
-                                int minute = calendar.get(Calendar.MINUTE);
-                                fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
-
-    // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
-                                if (pais!=null && pais.getDate().before(utilDate)){ //
-                                    pais.setTotalMuertes(jobj.getLong("TotalDeaths"));
-                                    pais.setTotalConfirmados(jobj.getLong("TotalConfirmed"));
-                                    pais.setTotalActivos(activos);
-                                    pais.setNuevosMuertes(jobj.getLong("NewDeaths"));
-                                    pais.setNuevosConfirmados(jobj.getLong("NewConfirmed"));
-                                    java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                                    pais.setDate(sqlDate);
-                                    AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-                                    db.countryDao().updateCountry(pais);
+                            } else {
+                                if(pais!=null) {
+                                    cargarInfoDesdeDB(pais);
+                                    noChartData();
+                                } else {
+                                    // No va a estar en la db necesariamente si no es favorito...
+                                    errorAlCargar(getString(R.string.errorInfoPais));
                                 }
                             }
                             drawChart();
@@ -225,7 +238,7 @@ public class CountryDetails extends AppCompatActivity {
                                 noChartData();
                                 cargarInfoDesdeDB(pais);
                             } else {
-                                errorAlCargar();
+                                errorAlCargar(getString(R.string.errorInfoPais));
                             }
                             Toast.makeText(getApplicationContext(), "Error3", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
@@ -240,7 +253,7 @@ public class CountryDetails extends AppCompatActivity {
                     noChartData();
                 } else {
                     // No va a estar en la db necesariamente si no es favorito...
-                    errorAlCargar();
+                    errorAlCargar(getString(R.string.errorInfoPais));
                 }
                 Toast.makeText(getApplicationContext(), "Error4", Toast.LENGTH_SHORT).show();
             }
@@ -277,8 +290,8 @@ public class CountryDetails extends AppCompatActivity {
         }
     }
 
-    private void errorAlCargar(){
-        Toast.makeText(getApplicationContext(), getString(R.string.errorInfoPais), Toast.LENGTH_SHORT).show();
+    private void errorAlCargar(String notification){
+        Toast.makeText(getApplicationContext(), notification, Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
@@ -301,16 +314,13 @@ public class CountryDetails extends AppCompatActivity {
     }
 
     public void drawChart() {
-//        private void drawChart() {
-            final RequestQueue queue = Volley.newRequestQueue(this);
-//            String tag_string_req = "req_chart";
-            String pais =((TextView)findViewById(R.id.pais)).getText().toString();
-            StringRequest strReq = new StringRequest(Request.Method.GET, "https://api.covid19api.com/total/dayone/country/"+pais,
+        final RequestQueue queue = Volley.newRequestQueue(this);
+        String pais =((TextView)findViewById(R.id.pais)).getText().toString();
+        StringRequest strReq = new StringRequest(Request.Method.GET, "https://api.covid19api.com/total/dayone/country/"+pais,
                     new Response.Listener<String>() {
 
                         @Override
                         public void onResponse(String response) {
-//                            Log.d(TAG, "Response: " + response);
                             try {
                                 JSONArray jsonArray = new JSONArray(response);
                                 if (jsonArray.length()>1) {
@@ -339,26 +349,26 @@ public class CountryDetails extends AppCompatActivity {
                                     }
 
 
-                                XAxis xAxis = mChart.getXAxis();
-//                                xAxis.setGranularityEnabled(true);
-//                                xAxis.setGranularity(100);
-//                                xAxis.setLabelCount(450, /*force: */true);
-                                xAxis.setLabelRotationAngle(-45);
-                                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-                                xAxis.setDrawGridLines(false);
-                                xAxis.setLabelCount(12, true);
-                                xAxis.setValueFormatter(new IAxisValueFormatter() {
-                                    @Override
-                                    public String getFormattedValue(float value, AxisBase axis) {
-                                        Calendar calendar = new GregorianCalendar();
-                                        calendar.setTime(new Date((long)value));
-                                        int year = calendar.get(Calendar.YEAR);
-                                        int month = calendar.get(Calendar.MONTH) + 1;
-                                        int day = calendar.get(Calendar.DAY_OF_MONTH);
-                                        String aux = day+"/"+month+"/"+year;
-                                        return aux;
-                                    }
-                                });
+                                    XAxis xAxis = mChart.getXAxis();
+    //                                xAxis.setGranularityEnabled(true);
+    //                                xAxis.setGranularity(100);
+    //                                xAxis.setLabelCount(450, /*force: */true);
+                                    xAxis.setLabelRotationAngle(-45);
+                                    xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                                    xAxis.setDrawGridLines(false);
+                                    xAxis.setLabelCount(12, true);
+                                    xAxis.setValueFormatter(new IAxisValueFormatter() {
+                                        @Override
+                                        public String getFormattedValue(float value, AxisBase axis) {
+                                            Calendar calendar = new GregorianCalendar();
+                                            calendar.setTime(new Date((long)value));
+                                            int year = calendar.get(Calendar.YEAR);
+                                            int month = calendar.get(Calendar.MONTH) + 1;
+                                            int day = calendar.get(Calendar.DAY_OF_MONTH);
+                                            String aux = day+"/"+month+"/"+year;
+                                            return aux;
+                                        }
+                                    });
 
                                     LineDataSet set1 = new LineDataSet(x, "Activos");
                                     set1.setLineWidth(1.5f);
@@ -386,18 +396,12 @@ public class CountryDetails extends AppCompatActivity {
                                     dataSets.add(set1); // add the datasets
                                     dataSets.add(set2);
                                     dataSets.add(set3);
-
                                     // create a data object with the datasets
                                     LineData data = new LineData(dataSets);
                                     data.setValueTextColor(Color.WHITE);
                                     data.setValueTextSize(9f);
-
                                     mChart.setData(data);
                                     mChart.invalidate();
-
-//                                LineData data = new LineData(y,set1);
-//                                mChart.setData(data);
-//                                mChart.invalidate();
                                 } else {
                                     noChartData();
                                 }
@@ -417,9 +421,7 @@ public class CountryDetails extends AppCompatActivity {
 
         private void noChartData(){
             com.github.mikephil.charting.charts.LineChart layout = findViewById(R.id.chart1);
-            // Gets the layout params that will allow you to resize the layout
             ViewGroup.LayoutParams params = layout.getLayoutParams();
-            // Changes the height and width to the specified *pixels*
             params.height = 150;
             layout.setLayoutParams(params);
         }
