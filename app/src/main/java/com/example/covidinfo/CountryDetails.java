@@ -218,51 +218,36 @@ public class CountryDetails extends AppCompatActivity {
                                         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                                         db.countryDao().updateCountry(pais);
                                     }
+                                    drawChart();
                                 } else {
-                                    errorAlCargar("Error al recuperar la informacion de "+country);
+//                                    errorAlCargar("Error al recuperar la informacion de "+country);
+                                    cargarInfoDesdeDB(pais,"Error al recuperar la informacion de "+country);
                                 }
                             } else {
-                                if(pais!=null) {
-                                    cargarInfoDesdeDB(pais);
-                                    noChartData();
-                                } else {
-                                    // No va a estar en la db necesariamente si no es favorito...
-                                    errorAlCargar(getString(R.string.errorInfoPais));
-                                }
+                                cargarInfoDesdeDB(pais,getString(R.string.errorInfoPais));
                             }
-                            drawChart();
+
                         } catch (JSONException e) {
                             // Cargar desde la db
                             // No va a estar en la db necesariamente si no es favorito...
-                            if(pais!=null) {
-                                noChartData();
-                                cargarInfoDesdeDB(pais);
-                            } else {
-                                errorAlCargar(getString(R.string.errorInfoPais));
-                            }
                             Toast.makeText(getApplicationContext(), "Error3", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
+                            cargarInfoDesdeDB(pais,getString(R.string.errorInfoPais));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // Cargar desde la db
-                if(pais!=null) {
-                    cargarInfoDesdeDB(pais);
-                    noChartData();
-                } else {
-                    // No va a estar en la db necesariamente si no es favorito...
-                    errorAlCargar(getString(R.string.errorInfoPais));
-                }
                 Toast.makeText(getApplicationContext(), "Error4", Toast.LENGTH_SHORT).show();
+                cargarInfoDesdeDB(pais,getString(R.string.errorInfoPais));
             }
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
 
-    private void cargarInfoDesdeDB(Country pais){
+    private void cargarInfoDesdeDB(Country pais, String infoError){
         if (pais!=null) {
             TextView totalActivos = (TextView) findViewById(R.id.totalActivos);
             TextView totalConfirmados = (TextView) findViewById(R.id.totalConfirmados);
@@ -287,6 +272,10 @@ public class CountryDetails extends AppCompatActivity {
             Integer hour = calendar.get(Calendar.HOUR);
             Integer minute = calendar.get(Calendar.MINUTE);
             fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
+            drawChart();
+        } else {
+            // No va a estar en la db necesariamente si no es favorito...
+            errorAlCargar(infoError);
         }
     }
 
@@ -295,6 +284,122 @@ public class CountryDetails extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
+    }
+
+    private void noChartData(){
+        com.github.mikephil.charting.charts.LineChart layout = findViewById(R.id.chart1);
+        ViewGroup.LayoutParams params = layout.getLayoutParams();
+        params.height = 150;
+        layout.setLayoutParams(params);
+    }
+
+    public void drawChart() {
+        final RequestQueue queue = Volley.newRequestQueue(this);
+        String pais =((TextView)findViewById(R.id.pais)).getText().toString();
+        StringRequest strReq = new StringRequest(Request.Method.GET, "https://api.covid19api.com/total/dayone/country/"+pais,
+                new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONArray jsonArray = new JSONArray(response);
+                            if (jsonArray.length()>1) {
+                                for (int i = 0; i < jsonArray.length(); i++) {
+//                                    for (int i = (jsonArray.length() < 200 ? jsonArray.length() : 200); i < jsonArray.length(); i++) {
+                                    int value = jsonArray.getJSONObject(i).getInt("Active");
+                                    int value2 = jsonArray.getJSONObject(i).getInt("Deaths");
+                                    int value3 = jsonArray.getJSONObject(i).getInt("Confirmed");
+                                    String date = jsonArray.getJSONObject(i).getString("Date");
+//                                        Los datos del dia 2021-03-07T00:00:00Z parecen ser erroneos
+//                                        if (!date.equals("2021-03-07T00:00:00Z")) {
+                                    date=date.replace("T"," ");
+                                    date=date.replace("Z","");
+                                    Date utilDate; // = new Date(strDate);
+                                    try {
+                                        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
+                                        utilDate = format.parse(date);
+                                    }
+                                    catch(ParseException pe) {
+                                        throw new IllegalArgumentException(pe);
+                                    }
+
+                                    x.add(new Entry(utilDate.getTime(), value));
+                                    x2.add(new Entry(utilDate.getTime(), value2));
+                                    x3.add(new Entry(utilDate.getTime(), value3));
+//                                        }
+                                }
+
+
+                                XAxis xAxis = mChart.getXAxis();
+                                //                                xAxis.setGranularityEnabled(true);
+                                //                                xAxis.setGranularity(100);
+                                //                                xAxis.setLabelCount(450, /*force: */true);
+                                xAxis.setLabelRotationAngle(-45);
+                                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                                xAxis.setDrawGridLines(false);
+                                xAxis.setLabelCount(12, true);
+                                xAxis.setValueFormatter(new IAxisValueFormatter() {
+                                    @Override
+                                    public String getFormattedValue(float value, AxisBase axis) {
+                                        Calendar calendar = new GregorianCalendar();
+                                        calendar.setTime(new Date((long)value));
+                                        int year = calendar.get(Calendar.YEAR);
+                                        int month = calendar.get(Calendar.MONTH) + 1;
+                                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                                        String aux = day+"/"+month+"/"+year;
+                                        return aux;
+                                    }
+                                });
+
+                                LineDataSet set1 = new LineDataSet(x, "Activos");
+                                set1.setLineWidth(1.5f);
+                                set1.setCircleRadius(2f);
+                                set1.setColor(Color.GREEN);
+                                set1.setCircleColor(Color.GREEN);
+                                set1.setFillColor(Color.GREEN);
+                                set1.setDrawValues(false);
+                                LineDataSet set2 = new LineDataSet(x2, "Muertos");
+                                set2.setLineWidth(1.5f);
+                                set2.setCircleRadius(2f);
+                                set2.setColor(Color.RED);
+                                set2.setCircleColor(Color.RED);
+                                set2.setFillColor(Color.RED);
+                                set2.setDrawValues(false);
+                                LineDataSet set3 = new LineDataSet(x3, "Confirmados");
+                                set3.setLineWidth(1.5f);
+                                set3.setCircleRadius(2f);
+                                set3.setColor(Color.YELLOW);
+                                set3.setCircleColor(Color.YELLOW);
+                                set3.setFillColor(Color.YELLOW);
+                                set3.setDrawValues(false);
+
+                                ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
+                                dataSets.add(set1); // add the datasets
+                                dataSets.add(set2);
+                                dataSets.add(set3);
+                                // create a data object with the datasets
+                                LineData data = new LineData(dataSets);
+                                data.setValueTextColor(Color.WHITE);
+                                data.setValueTextSize(9f);
+                                mChart.setData(data);
+                                mChart.invalidate();
+                            } else {
+                                noChartData();
+                            }
+                        } catch (Exception e) {
+                            noChartData();
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                noChartData();
+                Log.e(TAG, "Error: " + error.getMessage());
+            }
+        });
+        queue.add(strReq);
     }
 
     public void compartir(View view) {
@@ -312,118 +417,5 @@ public class CountryDetails extends AppCompatActivity {
         compartir.putExtra(android.content.Intent.EXTRA_TEXT, mensaje);
         startActivity(Intent.createChooser(compartir, getString(R.string.tituloCompartir)));
     }
-
-    public void drawChart() {
-        final RequestQueue queue = Volley.newRequestQueue(this);
-        String pais =((TextView)findViewById(R.id.pais)).getText().toString();
-        StringRequest strReq = new StringRequest(Request.Method.GET, "https://api.covid19api.com/total/dayone/country/"+pais,
-                    new Response.Listener<String>() {
-
-                        @Override
-                        public void onResponse(String response) {
-                            try {
-                                JSONArray jsonArray = new JSONArray(response);
-                                if (jsonArray.length()>1) {
-                                    for (int i = 0; i < jsonArray.length(); i++) {
-//                                    for (int i = (jsonArray.length() < 200 ? jsonArray.length() : 200); i < jsonArray.length(); i++) {
-                                        int value = jsonArray.getJSONObject(i).getInt("Active");
-                                        int value2 = jsonArray.getJSONObject(i).getInt("Deaths");
-                                        int value3 = jsonArray.getJSONObject(i).getInt("Confirmed");
-                                        String date = jsonArray.getJSONObject(i).getString("Date");
-                                        if (!date.equals("2021-03-07T00:00:00Z")) {
-                                            date=date.replace("T"," ");
-                                            date=date.replace("Z","");
-                                            Date utilDate; // = new Date(strDate);
-                                            try {
-                                                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:sss");
-                                                utilDate = format.parse(date);
-                                            }
-                                            catch(ParseException pe) {
-                                                throw new IllegalArgumentException(pe);
-                                            }
-
-                                            x.add(new Entry(utilDate.getTime(), value));
-                                            x2.add(new Entry(utilDate.getTime(), value2));
-                                            x3.add(new Entry(utilDate.getTime(), value3));
-                                        }
-                                    }
-
-
-                                    XAxis xAxis = mChart.getXAxis();
-    //                                xAxis.setGranularityEnabled(true);
-    //                                xAxis.setGranularity(100);
-    //                                xAxis.setLabelCount(450, /*force: */true);
-                                    xAxis.setLabelRotationAngle(-45);
-                                    xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-                                    xAxis.setDrawGridLines(false);
-                                    xAxis.setLabelCount(12, true);
-                                    xAxis.setValueFormatter(new IAxisValueFormatter() {
-                                        @Override
-                                        public String getFormattedValue(float value, AxisBase axis) {
-                                            Calendar calendar = new GregorianCalendar();
-                                            calendar.setTime(new Date((long)value));
-                                            int year = calendar.get(Calendar.YEAR);
-                                            int month = calendar.get(Calendar.MONTH) + 1;
-                                            int day = calendar.get(Calendar.DAY_OF_MONTH);
-                                            String aux = day+"/"+month+"/"+year;
-                                            return aux;
-                                        }
-                                    });
-
-                                    LineDataSet set1 = new LineDataSet(x, "Activos");
-                                    set1.setLineWidth(1.5f);
-                                    set1.setCircleRadius(2f);
-                                    set1.setColor(Color.GREEN);
-                                    set1.setCircleColor(Color.GREEN);
-                                    set1.setFillColor(Color.GREEN);
-                                    set1.setDrawValues(false);
-                                    LineDataSet set2 = new LineDataSet(x2, "Muertos");
-                                    set2.setLineWidth(1.5f);
-                                    set2.setCircleRadius(2f);
-                                    set2.setColor(Color.RED);
-                                    set2.setCircleColor(Color.RED);
-                                    set2.setFillColor(Color.RED);
-                                    set2.setDrawValues(false);
-                                    LineDataSet set3 = new LineDataSet(x3, "Confirmados");
-                                    set3.setLineWidth(1.5f);
-                                    set3.setCircleRadius(2f);
-                                    set3.setColor(Color.YELLOW);
-                                    set3.setCircleColor(Color.YELLOW);
-                                    set3.setFillColor(Color.YELLOW);
-                                    set3.setDrawValues(false);
-
-                                    ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
-                                    dataSets.add(set1); // add the datasets
-                                    dataSets.add(set2);
-                                    dataSets.add(set3);
-                                    // create a data object with the datasets
-                                    LineData data = new LineData(dataSets);
-                                    data.setValueTextColor(Color.WHITE);
-                                    data.setValueTextSize(9f);
-                                    mChart.setData(data);
-                                    mChart.invalidate();
-                                } else {
-                                    noChartData();
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e(TAG, "Error: " + error.getMessage());
-                }
-            });
-            queue.add(strReq);
-        }
-
-        private void noChartData(){
-            com.github.mikephil.charting.charts.LineChart layout = findViewById(R.id.chart1);
-            ViewGroup.LayoutParams params = layout.getLayoutParams();
-            params.height = 150;
-            layout.setLayoutParams(params);
-        }
 
 }

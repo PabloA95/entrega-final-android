@@ -55,19 +55,19 @@ public class MainActivity extends AppCompatActivity {
         queue = Volley.newRequestQueue(this);
         queue.start();
 
-        this.searchCountriesList();
+//        this.searchCountriesList();
         AppDatabase db = AppDatabase.getInstance(this);
         List<Country> list=db.countryDao().getAllOrderByName();
 
-        // Test
-        if(list.isEmpty()) {
-            Country c1 = new Country("Argentina",0L,0L,0L,0L,0L);
-            Country c2 = new Country("Brazil",3L,7L,1L,2L,1L);
-            c1.setDate(new java.sql.Date(new Date().getTime()));
-            c2.setDate(new java.sql.Date(new Date().getTime()));
-            db.countryDao().insertAll(c1, c2);
-            list=db.countryDao().getAll();
-        }
+//        // Test
+//        if(list.isEmpty()) {
+//            Country c1 = new Country("Argentina",0L,0L,0L,0L,0L);
+//            Country c2 = new Country("Brazil",3L,7L,1L,2L,1L);
+//            c1.setDate(new java.sql.Date(new Date().getTime()));
+//            c2.setDate(new java.sql.Date(new Date().getTime()));
+//            db.countryDao().insertAll(c1, c2);
+//            list=db.countryDao().getAll();
+//        }
 
         this.searchFavsInfo(list);
     }
@@ -90,10 +90,12 @@ public class MainActivity extends AppCompatActivity {
                                     AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                                     Context context = getApplicationContext();
                                     String auxCountry = jsonResponse.getJSONObject(0).getString("Country");
+                                    ArrayList<String> countriesSpinner = new ArrayList<String>();
                                     for (final Country c:list){
                                         while ((i <jsonResponse.length()-1) && !auxCountry.equals(c.getName()) && (auxCountry.compareTo(c.getName())<0)){
                                             i++;
                                             auxCountry = jsonResponse.getJSONObject(i).getString("Country");
+                                            countriesSpinner.add(auxCountry);
                                         }
 
                                         if (auxCountry.equals(c.getName())) {
@@ -126,9 +128,6 @@ public class MainActivity extends AppCompatActivity {
 
 //                                      Actualizar solo si los datos son mas nuevos
                                             if (c.getDate() != null && c.getDate().before(utilDate)) {
-                                                Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
-
-//        -----------                       //REVISAR QUE ESTO ANDE BIEN
                                                 c.setTotalMuertes(countryAux.getTotalMuertes());
                                                 c.setTotalConfirmados(countryAux.getTotalConfirmados());
                                                 c.setTotalActivos(countryAux.getTotalActivos());
@@ -136,19 +135,26 @@ public class MainActivity extends AppCompatActivity {
                                                 c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
                                                 c.setDate(countryAux.getDate());
                                                 db.countryDao().updateCountry(c);
+                                                Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
                                             }
                                         } else {
                                             Toast.makeText(getApplicationContext(), "Error al recuperar la informacion de "+auxCountry, Toast.LENGTH_SHORT).show();
                                         }
                                     }
+                                    for (int j = i; j < jsonResponse.length(); j++) {
+                                        countriesSpinner.add(jsonResponse.getJSONObject(j).getString("Country"));
+                                    }
+                                    loadCountriesList(countriesSpinner);
                                 } else {
                                     // Si el json esta vacio, cargo los datos de la DB
                                     cargarDesdeDB(list);
+                                    errorCargandoLaLista();
                                     Toast.makeText(getApplicationContext(), getString(R.string.jsonArrayVacio), Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException e) {
                                 // Si el ocurre un error, cargo los datos de la DB
                                 cargarDesdeDB(list);
+                                errorCargandoLaLista();
                                 Toast.makeText(getApplicationContext(), getString(R.string.jsonException), Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
                             }
@@ -158,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onErrorResponse(VolleyError error) {
                     // Si el servidor responde con un error, cargo los datos de la DB
                     cargarDesdeDB(list);
+                    errorCargandoLaLista();
                     Toast.makeText(getApplicationContext(), getString(R.string.volleryError), Toast.LENGTH_SHORT).show();
                 }
             });
@@ -166,49 +173,16 @@ public class MainActivity extends AppCompatActivity {
             queue.add(stringRequest);
     }
 
-    private void searchCountriesList(){
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.covid19api.com/countries";
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        JSONArray jsonResponse;
-                        ArrayList<String> countriesSpinner = new ArrayList<String>();
-                        try {
-                            jsonResponse = new JSONArray(response);
-                            for (int i = 0; i < jsonResponse.length(); i++) {
-                                countriesSpinner.add(jsonResponse.getJSONObject(i).getString("Country"));
-                            }
-
-                            Spinner s = (Spinner) findViewById(R.id.countries);
-                            Collections.sort(countriesSpinner);
-//  spinner.setAdapter(new ArrayAdapter<String>(this, R.layout.textview_spinner, valores));
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),
-                                    R.layout.spinner_style, countriesSpinner);
-                            adapter.setDropDownViewResource(R.layout.spinner_style);
-                            s.setAdapter(adapter);
-                            ((Button) findViewById(R.id.buscar)).setVisibility(View.VISIBLE);
-                            ((Button) findViewById(R.id.reload)).setVisibility(View.GONE);
-                            ((TextView) findViewById(R.id.listError)).setVisibility(View.GONE);
-                        } catch (JSONException e) {
-                            errorCargandoLaLista();
-                            Toast.makeText(getApplicationContext(), getString(R.string.errorCargarListaPaises), Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // Si el servidor responde con un error, borro el boton de buscar
-                errorCargandoLaLista();
-                Toast.makeText(getApplicationContext(), getString(R.string.errorRespuestaServidor), Toast.LENGTH_SHORT).show();
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+    private void loadCountriesList(ArrayList<String> countriesSpinner){
+        Spinner s = (Spinner) findViewById(R.id.countries);
+        Collections.sort(countriesSpinner);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),
+                R.layout.spinner_style, countriesSpinner);
+        adapter.setDropDownViewResource(R.layout.spinner_style);
+        s.setAdapter(adapter);
+        ((Button) findViewById(R.id.buscar)).setVisibility(View.VISIBLE);
+        ((Button) findViewById(R.id.reload)).setVisibility(View.GONE);
+        ((TextView) findViewById(R.id.listError)).setVisibility(View.GONE);
     }
 
     public void verDetalles(View view) {
@@ -227,6 +201,55 @@ public class MainActivity extends AppCompatActivity {
             crearViewParaPais(c,i, favs,context);
             i++;
         }
+    }
+
+    public void recargarLista(View view) {
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="https://api.covid19api.com/summary";
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        JSONArray jsonResponse;
+                        ArrayList<String> countriesSpinner = new ArrayList<String>();
+                        try {
+                            jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
+                            for (int i = 0; i < jsonResponse.length(); i++) {
+                                countriesSpinner.add(jsonResponse.getJSONObject(i).getString("Country"));
+                            }
+
+                            loadCountriesList(countriesSpinner);
+
+                        } catch (JSONException e) {
+                            errorCargandoLaLista();
+                            Toast.makeText(getApplicationContext(), getString(R.string.errorCargarListaPaises), Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Si el servidor responde con un error, borro el boton de buscar
+                errorCargandoLaLista();
+                Toast.makeText(getApplicationContext(), getString(R.string.errorRespuestaServidor), Toast.LENGTH_SHORT).show();
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+    }
+
+    private void errorCargandoLaLista(){
+        Button r = (Button) findViewById(R.id.reload);
+        r.setVisibility(View.VISIBLE);
+        // Si no puedo cargar la lista de paises, borro el boton de buscar
+        TextView texto = (TextView) findViewById(R.id.listError);
+        texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        texto.setPadding(25,0,0,0);
+        texto.setText(getString(R.string.errorCargarLista));
+        texto.setVisibility(View.VISIBLE);
+        Button b = (Button) findViewById(R.id.buscar);
+        b.setVisibility(View.GONE);
     }
 
     private void crearViewParaPais(final Country c, int i, LinearLayout favs, Context context){
@@ -315,11 +338,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v){
                 if (layoutContent.getVisibility() == View.GONE) {
-                    //            animar(true);
                     unfold.setImageResource(R.drawable.pleg);
                     layoutContent.setVisibility(View.VISIBLE);
                 } else{
-                    //            animar(false);
                     unfold.setImageResource(R.drawable.des);
                     layoutContent.setVisibility(View.GONE);
                 }
@@ -381,43 +402,4 @@ public class MainActivity extends AppCompatActivity {
         layoutContent.addView(nuevosMuertes);
     }
 
-    public void recargarLista(View view) {
-        searchCountriesList();
-    }
-
-    private void errorCargandoLaLista(){
-        Button r = (Button) findViewById(R.id.reload);
-        r.setVisibility(View.VISIBLE);
-        // Si no puedo cargar la lista de paises, borro el boton de buscar
-        TextView texto = (TextView) findViewById(R.id.listError);
-        texto.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        texto.setPadding(25,0,0,0);
-        texto.setText(getString(R.string.errorCargarLista));
-        texto.setVisibility(View.VISIBLE);
-        Button b = (Button) findViewById(R.id.buscar);
-        b.setVisibility(View.GONE);
-
-    }
-
-//    private void animar(boolean mostrar)
-//    {
-//        AnimationSet set = new AnimationSet(true);
-//        Animation animation = null;
-//        if (mostrar)
-//        {
-//            //desde la esquina inferior derecha a la superior izquierda
-//            animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0.0f);
-//        }
-//        else
-//        {    //desde la esquina superior izquierda a la esquina inferior derecha
-//            animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1.0f);
-//        }
-//        //duración en milisegundos
-//        animation.setDuration(500);
-//        set.addAnimation(animation);
-//        LayoutAnimationController controller = new LayoutAnimationController(set, 0.25f);
-//
-//        layoutAnimado.setLayoutAnimation(controller);
-//        layoutAnimado.startAnimation(animation);
-//    }
 }
