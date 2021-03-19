@@ -40,8 +40,9 @@ public class Country {
         name=nameParameter;
     }
 
-    public Country(String name, Long totalActivos, Long totalConfirmados, Long totalMuertes, Long nuevosConfirmados, Long nuevosMuertes) {
+    public Country(String name,Date date, Long totalActivos, Long totalConfirmados, Long totalMuertes, Long nuevosConfirmados, Long nuevosMuertes) {
         this.name = name;
+        this.date = date;
         this.totalActivos = totalActivos;
         this.totalConfirmados = totalConfirmados;
         this.totalMuertes = totalMuertes;

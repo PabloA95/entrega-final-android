@@ -61,12 +61,10 @@ public class MainActivity extends AppCompatActivity {
 
 //        // Test
 //        if(list.isEmpty()) {
-//            Country c1 = new Country("Argentina",0L,0L,0L,0L,0L);
-//            Country c2 = new Country("Brazil",3L,7L,1L,2L,1L);
-//            c1.setDate(new java.sql.Date(new Date().getTime()));
-//            c2.setDate(new java.sql.Date(new Date().getTime()));
+//            Country c1 = new Country("Argentina",new java.sql.Date(new Date().getTime()),0L,0L,0L,0L,0L);
+//            Country c2 = new Country("Brazil",new java.sql.Date(new Date().getTime()),3L,7L,1L,2L,1L);
 //            db.countryDao().insertAll(c1, c2);
-//            list=db.countryDao().getAll();
+//            list=db.countryDao().getAllOrderByName();
 //        }
 
         this.searchFavsInfo(list);
@@ -87,27 +85,21 @@ public class MainActivity extends AppCompatActivity {
                                 jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
                                 if (jsonResponse.length() > 0) {
                                     int i=0;
-                                    AppDatabase db = AppDatabase.getInstance(getApplicationContext());
                                     Context context = getApplicationContext();
+                                    AppDatabase db = AppDatabase.getInstance(context);
                                     String auxCountry = jsonResponse.getJSONObject(0).getString("Country");
                                     ArrayList<String> countriesSpinner = new ArrayList<String>();
                                     for (final Country c:list){
                                         while ((i <jsonResponse.length()-1) && !auxCountry.equals(c.getName()) && (auxCountry.compareTo(c.getName())<0)){
+                                            countriesSpinner.add(auxCountry);
                                             i++;
                                             auxCountry = jsonResponse.getJSONObject(i).getString("Country");
-                                            countriesSpinner.add(auxCountry);
+
                                         }
 
                                         if (auxCountry.equals(c.getName())) {
-                                            // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
                                             JSONObject jobj = jsonResponse.getJSONObject(i);
-                                            long totalConfirmados = jobj.getLong("TotalConfirmed");
-                                            long totalMuertes = jobj.getLong("TotalDeaths");
-                                            long nuevosConfirmados = jobj.getLong("NewConfirmed");
-                                            long nuevosMuertes = jobj.getLong("NewDeaths");
-                                            long totalActivos = totalConfirmados - totalMuertes - jobj.getLong("TotalRecovered");
-//NECESITO CREAR UN OBJETO NUEVO? REVISAR ESTO -> EN C TENGO EL OBJETO...
-                                            Country countryAux = new Country(c.getName(), totalActivos, totalConfirmados, totalMuertes, nuevosConfirmados, nuevosMuertes);
+
                                             String strDate = jobj.getString("Date");
                                             strDate = strDate.replace("T", " ");
                                             strDate = strDate.replace("Z", "");
@@ -122,22 +114,28 @@ public class MainActivity extends AppCompatActivity {
                                                 throw new IllegalArgumentException(pe);
                                             }
                                             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-                                            countryAux.setDate(sqlDate);
 
-                                            crearViewParaPais(countryAux, i, favs, context);
+                                            if (c.getDate() == null || c.getDate().before(utilDate)) {
+                                                // Creo el objeto que tiene los datos del pais que tengo que mostrar en la view
+                                                long totalConfirmados = jobj.getLong("TotalConfirmed");
+                                                long totalMuertes = jobj.getLong("TotalDeaths");
+                                                long nuevosConfirmados = jobj.getLong("NewConfirmed");
+                                                long nuevosMuertes = jobj.getLong("NewDeaths");
+                                                long totalActivos = totalConfirmados - totalMuertes - jobj.getLong("TotalRecovered");
 
-//                                      Actualizar solo si los datos son mas nuevos
-                                            if (c.getDate() != null && c.getDate().before(utilDate)) {
-                                                c.setTotalMuertes(countryAux.getTotalMuertes());
-                                                c.setTotalConfirmados(countryAux.getTotalConfirmados());
-                                                c.setTotalActivos(countryAux.getTotalActivos());
-                                                c.setNuevosMuertes(countryAux.getNuevosMuertes());
-                                                c.setNuevosConfirmados(countryAux.getNuevosConfirmados());
-                                                c.setDate(countryAux.getDate());
+                                                c.setTotalMuertes(totalMuertes);
+                                                c.setTotalConfirmados(totalConfirmados);
+                                                c.setTotalActivos(totalActivos);
+                                                c.setNuevosMuertes(nuevosMuertes);
+                                                c.setNuevosConfirmados(nuevosConfirmados);
+                                                c.setDate(sqlDate);
+
                                                 db.countryDao().updateCountry(c);
                                                 Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
                                             }
+                                            crearViewParaPais(c, i, favs, context);
                                         } else {
+                                            crearViewParaPais(c, i, favs, context);
                                             Toast.makeText(getApplicationContext(), "Error al recuperar la informacion de "+auxCountry, Toast.LENGTH_SHORT).show();
                                         }
                                     }
@@ -147,15 +145,15 @@ public class MainActivity extends AppCompatActivity {
                                     loadCountriesList(countriesSpinner);
                                 } else {
                                     // Si el json esta vacio, cargo los datos de la DB
+                                    Toast.makeText(getApplicationContext(), getString(R.string.jsonArrayVacio), Toast.LENGTH_SHORT).show();
                                     cargarDesdeDB(list);
                                     errorCargandoLaLista();
-                                    Toast.makeText(getApplicationContext(), getString(R.string.jsonArrayVacio), Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException e) {
                                 // Si el ocurre un error, cargo los datos de la DB
+                                Toast.makeText(getApplicationContext(), getString(R.string.jsonException), Toast.LENGTH_SHORT).show();
                                 cargarDesdeDB(list);
                                 errorCargandoLaLista();
-                                Toast.makeText(getApplicationContext(), getString(R.string.jsonException), Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
                             }
                         }
@@ -163,9 +161,9 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     // Si el servidor responde con un error, cargo los datos de la DB
+                    Toast.makeText(getApplicationContext(), getString(R.string.volleryError), Toast.LENGTH_SHORT).show();
                     cargarDesdeDB(list);
                     errorCargandoLaLista();
-                    Toast.makeText(getApplicationContext(), getString(R.string.volleryError), Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -194,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void cargarDesdeDB(List<Country> list){
-        LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
+        LinearLayout favs = findViewById(R.id.favs);
         int i=0;
         Context context = getApplicationContext();
         for (Country c:list){
@@ -215,12 +213,14 @@ public class MainActivity extends AppCompatActivity {
                         ArrayList<String> countriesSpinner = new ArrayList<String>();
                         try {
                             jsonResponse = (new JSONObject(response)).getJSONArray("Countries");
-                            for (int i = 0; i < jsonResponse.length(); i++) {
-                                countriesSpinner.add(jsonResponse.getJSONObject(i).getString("Country"));
+                            if (jsonResponse.length()>0) {
+                                for (int i = 0; i < jsonResponse.length(); i++) {
+                                    countriesSpinner.add(jsonResponse.getJSONObject(i).getString("Country"));
+                                }
+                                loadCountriesList(countriesSpinner);
+                            } else {
+                                errorCargandoLaLista();
                             }
-
-                            loadCountriesList(countriesSpinner);
-
                         } catch (JSONException e) {
                             errorCargandoLaLista();
                             Toast.makeText(getApplicationContext(), getString(R.string.errorCargarListaPaises), Toast.LENGTH_SHORT).show();

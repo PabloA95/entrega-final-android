@@ -51,9 +51,7 @@ public class CountryDetails extends AppCompatActivity {
     ArrayList<Entry> x;
     ArrayList<Entry> x2;
     ArrayList<Entry> x3;
-    ArrayList<String> y;
     private LineChart mChart;
-    public String TAG = "CountryDetails";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +75,6 @@ public class CountryDetails extends AppCompatActivity {
         x = new ArrayList<Entry>();
         x2 = new ArrayList<Entry>();
         x3 = new ArrayList<Entry>();
-        y = new ArrayList<String>();
         mChart = (LineChart) findViewById(R.id.chart1);
         mChart.setDrawGridBackground(false);
         mChart.setTouchEnabled(true);
@@ -106,13 +103,6 @@ public class CountryDetails extends AppCompatActivity {
         Country country=db.countryDao().findByName((String) pais.getText());
         ImageButton favIcon = findViewById(R.id.favIcon);
         if(country==null) {
-            Long totalActivos = Long.valueOf(((TextView) findViewById(R.id.totalActivos)).getText().toString().replaceAll("[a-zA-Z :]", ""));
-            Long totalConfirmados = Long.valueOf(((TextView) findViewById(R.id.totalConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
-            Long totalMuertes = Long.valueOf(((TextView) findViewById(R.id.totalMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
-            Long nuevosConfirmados = Long.valueOf(((TextView) findViewById(R.id.nuevosConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
-            Long nuevosMuertes = Long.valueOf(((TextView) findViewById(R.id.nuevosMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
-            Country c1 = new Country(pais.getText().toString(),totalActivos,totalConfirmados,totalMuertes,nuevosConfirmados,nuevosMuertes);
-
             String strDate = ((TextView) findViewById(R.id.fecha)).getText().toString();
             Date utilDate; // = new Date(strDate);
             try {
@@ -123,7 +113,13 @@ public class CountryDetails extends AppCompatActivity {
                 throw new IllegalArgumentException(pe);
             }
             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-            c1.setDate(sqlDate);
+            Long totalActivos = Long.valueOf(((TextView) findViewById(R.id.totalActivos)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long totalConfirmados = Long.valueOf(((TextView) findViewById(R.id.totalConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long totalMuertes = Long.valueOf(((TextView) findViewById(R.id.totalMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long nuevosConfirmados = Long.valueOf(((TextView) findViewById(R.id.nuevosConfirmados)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Long nuevosMuertes = Long.valueOf(((TextView) findViewById(R.id.nuevosMuertes)).getText().toString().replaceAll("[a-zA-Z :]", ""));
+            Country c1 = new Country(pais.getText().toString(),sqlDate,totalActivos,totalConfirmados,totalMuertes,nuevosConfirmados,nuevosMuertes);
+
             db.countryDao().insert(c1);
             favIcon.setImageResource(R.drawable.si);
             Toast.makeText(getApplicationContext(), "Agregado a favoritos", Toast.LENGTH_SHORT).show();
@@ -239,7 +235,7 @@ public class CountryDetails extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // Cargar desde la db
-                Toast.makeText(getApplicationContext(), "Error4", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "No se pudo actualizar la informacion", Toast.LENGTH_SHORT).show();
                 cargarInfoDesdeDB(pais,getString(R.string.errorInfoPais));
             }
         });
@@ -331,9 +327,9 @@ public class CountryDetails extends AppCompatActivity {
 
 
                                 XAxis xAxis = mChart.getXAxis();
-                                //                                xAxis.setGranularityEnabled(true);
-                                //                                xAxis.setGranularity(100);
-                                //                                xAxis.setLabelCount(450, /*force: */true);
+                                // xAxis.setGranularityEnabled(true);
+                                // xAxis.setGranularity(100);
+                                // xAxis.setLabelCount(450, /*force: */true);
                                 xAxis.setLabelRotationAngle(-45);
                                 xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
                                 xAxis.setDrawGridLines(false);
@@ -396,7 +392,7 @@ public class CountryDetails extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 noChartData();
-                Log.e(TAG, "Error: " + error.getMessage());
+                Log.e("CountryDetails", "Error: " + error.getMessage());
             }
         });
         queue.add(strReq);
