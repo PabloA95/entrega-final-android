@@ -372,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         int hour = calendar.get(Calendar.HOUR);
         int minute = calendar.get(Calendar.MINUTE);
-        dateView.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
+        dateView.setText(String.format("%d/%d/%d %d:%s", day, month, year, hour, (minute > 9) ? minute : "0" + minute));
 
         LinearLayout.LayoutParams dataParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         nuevosMuertes.setLayoutParams(dataParams);

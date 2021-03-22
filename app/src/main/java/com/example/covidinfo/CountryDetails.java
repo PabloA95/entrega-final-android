@@ -199,7 +199,7 @@ public class CountryDetails extends AppCompatActivity {
                                     int day = calendar.get(Calendar.DAY_OF_MONTH);
                                     int hour = calendar.get(Calendar.HOUR);
                                     int minute = calendar.get(Calendar.MINUTE);
-                                    fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
+                                    fecha.setText(String.format("%d/%d/%d %d:%s", day, month, year, hour, (minute > 9) ? minute : "0" + minute));
 
                                     // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
                                     if (pais != null && pais.getDate().before(utilDate)) { //
@@ -266,7 +266,7 @@ public class CountryDetails extends AppCompatActivity {
             Integer day = calendar.get(Calendar.DAY_OF_MONTH);
             Integer hour = calendar.get(Calendar.HOUR);
             Integer minute = calendar.get(Calendar.MINUTE);
-            fecha.setText(String.format("%d/%d/%d %d:%d", day, month, year, hour, minute));
+            fecha.setText(String.format("%d/%d/%d %d:%s", day, month, year, hour, (minute > 9) ? minute : "0" + minute));
             drawChart();
         } else {
             // No va a estar en la db necesariamente si no es favorito...
@@ -407,7 +407,6 @@ public class CountryDetails extends AppCompatActivity {
         mensaje = mensaje + "\n" + ((TextView) findViewById(R.id.totalMuertes)).getText();
         mensaje = mensaje + "\n" + ((TextView) findViewById(R.id.nuevosConfirmados)).getText();
         mensaje = mensaje + "\n" + ((TextView) findViewById(R.id.nuevosMuertes)).getText();
-        TextView fecha = (TextView) findViewById(R.id.fecha);
         compartir.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.subjectCompartir)+ ((TextView)findViewById(R.id.pais)).getText().toString());
         compartir.putExtra(android.content.Intent.EXTRA_TEXT, mensaje);
         startActivity(Intent.createChooser(compartir, getString(R.string.tituloCompartir)));
