@@ -194,12 +194,8 @@ public class CountryDetails extends AppCompatActivity {
                                     }
                                     Calendar calendar = new GregorianCalendar();
                                     calendar.setTime(utilDate);
-                                    int year = calendar.get(Calendar.YEAR);
-                                    int month = calendar.get(Calendar.MONTH) + 1;
-                                    int day = calendar.get(Calendar.DAY_OF_MONTH);
-                                    int hour = calendar.get(Calendar.HOUR);
-                                    int minute = calendar.get(Calendar.MINUTE);
-                                    fecha.setText(String.format("%d/%d/%d %d:%s", day, month, year, hour, (minute > 9) ? minute : "0" + minute));
+                                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                                    fecha.setText(formatter.format(utilDate));
 
                                     // DEBERIA ACTUALIZAR SI ENCUENTRA INFO NUEVA
                                     if (pais != null && pais.getDate().before(utilDate)) { //
@@ -261,12 +257,8 @@ public class CountryDetails extends AppCompatActivity {
             Date utilDate = new Date(sqlDate.getTime());
             Calendar calendar = new GregorianCalendar();
             calendar.setTime(utilDate);
-            Integer year = calendar.get(Calendar.YEAR);
-            Integer month = calendar.get(Calendar.MONTH) + 1;
-            Integer day = calendar.get(Calendar.DAY_OF_MONTH);
-            Integer hour = calendar.get(Calendar.HOUR);
-            Integer minute = calendar.get(Calendar.MINUTE);
-            fecha.setText(String.format("%d/%d/%d %d:%s", day, month, year, hour, (minute > 9) ? minute : "0" + minute));
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            fecha.setText(formatter.format(utilDate));
             drawChart();
         } else {
             // No va a estar en la db necesariamente si no es favorito...
