@@ -44,7 +44,7 @@ import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
-    private RequestQueue queue;
+//    private RequestQueue queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +52,9 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
         Objects.requireNonNull(getSupportActionBar()).hide(); // hide the title bar
         setContentView(R.layout.activity_main);
-        queue = Volley.newRequestQueue(this);
-        queue.start();
+//        queue = Volley.newRequestQueue(this);
+//        queue.start();
 
-//        this.searchCountriesList();
         AppDatabase db = AppDatabase.getInstance(this);
         List<Country> list=db.countryDao().getAllOrderByName();
 
@@ -74,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         final LinearLayout favs = (LinearLayout) findViewById(R.id.favs);
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
+        queue.start();
         String url ="https://api.covid19api.com/summary";
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,

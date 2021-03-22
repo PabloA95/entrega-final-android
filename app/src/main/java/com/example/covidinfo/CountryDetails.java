@@ -100,7 +100,7 @@ public class CountryDetails extends AppCompatActivity {
     public void toggleFav(View view) {
         TextView pais = (TextView)findViewById(R.id.pais);
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-        Country country=db.countryDao().findByName((String) pais.getText());
+        Country country=db.countryDao().findByName(pais.getText().toString());
         ImageButton favIcon = findViewById(R.id.favIcon);
         if(country==null) {
             String strDate = ((TextView) findViewById(R.id.fecha)).getText().toString();
@@ -140,7 +140,7 @@ public class CountryDetails extends AppCompatActivity {
         final RequestQueue queue = Volley.newRequestQueue(this);
         String url ="https://api.covid19api.com/summary";
         final String country;
-        country = (String) ((TextView) findViewById(R.id.pais)).getText();
+        country = ((TextView) findViewById(R.id.pais)).getText().toString();
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         final Country pais=db.countryDao().findByName(country);
         ImageButton favIcon = findViewById(R.id.favIcon);
@@ -165,7 +165,6 @@ public class CountryDetails extends AppCompatActivity {
                                     auxCountry = jsonResponse.getJSONObject(i).getString("Country");
                                 }
                                 if (auxCountry.equals(country)) {
-                                    // CONTROLAR SI POR MOTIVO RARO NO LO ENCUENTRA
                                     JSONObject jobj = jsonResponse.getJSONObject(i);
                                     Context context = getApplicationContext();
 

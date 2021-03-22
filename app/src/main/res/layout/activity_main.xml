@@ -16,14 +16,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-<!--            <TextView-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="COVID19 APP!"-->
-<!--                android:textSize="50sp"-->
-<!--                android:textAlignment="center"-->
-<!--                app:layout_constraintTop_toTopOf="parent"-->
-<!--                android:textColor="@color/textColor"/>-->
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
