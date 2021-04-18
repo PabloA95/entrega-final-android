@@ -1,12 +1,12 @@
-#Enfoques de Desarrollo de Aplicaciones Móviles Multiplataforma #
-##Trabajo Especial Promoción - Cursada año 2020##
+# Enfoques de Desarrollo de Aplicaciones Móviles Multiplataforma #
+## Trabajo Especial Promoción - Cursada año 2020 ##
 
 _El objetivo del trabajo consiste en desarrollar una aplicación móvil para la consulta de datos sobre la situación de la pandemia por COVID-19_
 
 __La aplicaion sera desarrollada utilizando un enfoque nativo, mediante el uso de Android Studio__
 
 
-###Requerimientos###
+### Requerimientos ###
 
 Para la realización del trabajo se deberá utilizar la API pública COVID19 https://covid19api.com/ , cuya documentación se puede consultar en https://documenter.getpostman.com/view/10808728/SzS8rjbc . El aplicativo debe cumplir los siguientes requerimientos:
 
@@ -23,7 +23,7 @@ __5)__ Se debe poder marcar un país como favorito y obtener información actual
 __6)__ Se debe poder des-seleccionar el país del listado de favoritos.
 
 
-#####Adicionalmente el aplicativo debe satisfacer al menos uno de los siguientes requerimientos:#####
+##### Adicionalmente el aplicativo debe satisfacer al menos uno de los siguientes requerimientos: #####
 
 __7)__ Debe permitir compartir la información de un país en redes sociales.
 
