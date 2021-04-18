@@ -3,6 +3,9 @@
 
 _El objetivo del trabajo consiste en desarrollar una aplicación móvil para la consulta de datos sobre la situación de la pandemia por COVID-19_
 
+__La aplicaion sera desarrollada utilizando un enfoque nativo, mediante el uso de Android Studio__
+
+
 ###Requerimientos###
 
 Para la realización del trabajo se deberá utilizar la API pública COVID19 https://covid19api.com/ , cuya documentación se puede consultar en https://documenter.getpostman.com/view/10808728/SzS8rjbc . El aplicativo debe cumplir los siguientes requerimientos:
